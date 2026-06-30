@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layers,
@@ -256,6 +256,7 @@ function SimulatorPage() {
   const [proposalOpen, setProposalOpen] = useState(false);
   const [proposalForm, setProposalForm] = useState({ name: "", email: "", phone: "", company: "" });
   const [proposalSubmitting, setProposalSubmitting] = useState(false);
+  const hpRef = useRef<HTMLInputElement>(null);
 
   const result = useMemo(() => {
     if (!categoryId) return null;
@@ -298,7 +299,7 @@ function SimulatorPage() {
     }
     setProposalSubmitting(true);
     try {
-      await submitProposalRequest({ data: proposalForm });
+      await submitProposalRequest({ data: { ...proposalForm, _hp_: hpRef.current?.value ?? "" } });
       toast.success("Pedido enviado! Entraremos em contacto em breve.");
       setProposalOpen(false);
       setProposalForm({ name: "", email: "", phone: "", company: "" });
@@ -675,6 +676,14 @@ function SimulatorPage() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submitProposal} className="space-y-3">
+            <input
+              ref={hpRef}
+              name="_hp_"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+            />
             <div>
               <Label htmlFor="pn">Nome *</Label>
               <Input

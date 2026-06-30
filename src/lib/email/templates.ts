@@ -85,7 +85,7 @@ function fieldRow(label: string, value: string): string {
   return `
     <tr>
       <td style="padding:6px 0;font-size:13px;font-weight:600;color:#888;width:140px;vertical-align:top">${escapeHtml(label)}</td>
-      <td style="padding:6px 0;font-size:14px;color:#333">${value}</td>
+      <td style="padding:6px 0;font-size:14px;color:#333">${escapeHtml(value)}</td>
     </tr>`;
 }
 
@@ -116,7 +116,7 @@ export function contactNotificationHtml(data: ContactNotificationData): string {
   const metaRows = [
     fieldRow("Data/Hora", new Date().toLocaleString("pt-PT", { timeZone: "Africa/Maputo" })),
     data.ip ? fieldRow("IP", data.ip) : "",
-    data.userAgent ? fieldRow("User Agent", escapeHtml(data.userAgent)) : "",
+    data.userAgent ? fieldRow("User Agent", data.userAgent) : "",
   ]
     .filter(Boolean)
     .join("");

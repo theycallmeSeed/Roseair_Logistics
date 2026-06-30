@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Linkedin, Mail, Sparkles } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { PageHero } from "@/components/PageHero";
@@ -92,6 +92,7 @@ function TeamPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "", message: "" });
   const [submittingForm, setSubmittingForm] = useState(false);
+  const hpRef = useRef<HTMLInputElement>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +102,7 @@ function TeamPage() {
     }
     setSubmittingForm(true);
     try {
-      await submitApplication({ data: form });
+      await submitApplication({ data: { ...form, _hp_: hpRef.current?.value ?? "" } });
       toast.success("Candidatura enviada! Entraremos em contacto.");
       setOpen(false);
       setForm({ name: "", email: "", role: "", message: "" });
@@ -197,6 +198,14 @@ function TeamPage() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-3">
+            <input
+              ref={hpRef}
+              name="_hp_"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+            />
             <div>
               <Label>Nome *</Label>
               <Input

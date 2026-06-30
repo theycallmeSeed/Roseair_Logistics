@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { validateEnv } from "@/lib/resend";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { sendProposalEmail } from "@/lib/email/sendProposalEmail";
 
 const schema = z.object({
@@ -13,6 +15,22 @@ const schema = z.object({
 export const submitProposalRequest = createServerFn({
   method: "POST",
 }).handler(async ({ data }) => {
+  const raw = data as Record<string, unknown>;
+  if (typeof raw._hp_ === "string" && raw._hp_.length > 0) {
+    return {
+      success: true,
+      message: "Pedido enviado! Entraremos em contacto em breve.",
+    };
+  }
+
+  const ip = getRequestIP() ?? "unknown";
+  if (!checkRateLimit(ip).allowed) {
+    return {
+      success: false,
+      message: "Muitas tentativas. Tente novamente mais tarde.",
+    };
+  }
+
   const parsed = schema.safeParse(data);
   if (!parsed.success) {
     return {

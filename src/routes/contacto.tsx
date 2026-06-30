@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -55,6 +55,7 @@ type FormValues = z.infer<typeof schema>;
 
 function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
+  const hpRef = useRef<HTMLInputElement>(null);
   const {
     register,
     handleSubmit,
@@ -70,7 +71,7 @@ function ContactPage() {
   const onSubmit = async (data: FormValues) => {
     setSubmitting(true);
     try {
-      await submitContactForm({ data });
+      await submitContactForm({ data: { ...data, _hp_: hpRef.current?.value ?? "" } });
       toast.success("Mensagem enviada! A nossa equipa responderá em breve.");
       reset();
     } catch (error) {
@@ -191,6 +192,14 @@ function ContactPage() {
               {errors.consent && (
                 <p className="-mt-2 text-xs text-destructive">{errors.consent.message}</p>
               )}
+              <input
+                ref={hpRef}
+                name="_hp_"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+              />
               <Button
                 type="submit"
                 size="lg"
