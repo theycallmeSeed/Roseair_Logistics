@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { validateEnv } from "@/lib/resend";
+import { sendContactEmail } from "@/lib/email/sendContactEmail";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -13,8 +15,34 @@ const schema = z.object({
 
 export const submitContactForm = createServerFn({ method: "POST" }).handler(async ({ data }) => {
   const parsed = schema.safeParse(data);
-  if (!parsed.success) throw new Error("Dados inválidos. Verifique os campos.");
-  // TODO: Integrate with email service or CRM
-  console.log("[Contact Form]", JSON.stringify(parsed.data, null, 2));
-  return { success: true };
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: "Dados inválidos. Verifique os campos e tente novamente.",
+    };
+  }
+
+  const missing = validateEnv();
+  if (missing.length > 0) {
+    console.error(`[submitContactForm] Missing env vars: ${missing.join(", ")}`);
+    return {
+      success: false,
+      message:
+        "O formulário de contacto está temporariamente indisponível. Tente novamente mais tarde.",
+    };
+  }
+
+  try {
+    await sendContactEmail(parsed.data);
+    return {
+      success: true,
+      message: "Mensagem enviada! A nossa equipa responderá em breve.",
+    };
+  } catch (error) {
+    console.error("[submitContactForm] Failed to send email", error);
+    return {
+      success: false,
+      message: "Ocorreu um erro ao enviar a sua mensagem. Tente novamente mais tarde.",
+    };
+  }
 });

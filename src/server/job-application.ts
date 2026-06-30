@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { validateEnv } from "@/lib/resend";
+import { sendApplicationEmail } from "@/lib/email/sendApplicationEmail";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -10,7 +12,34 @@ const schema = z.object({
 
 export const submitApplication = createServerFn({ method: "POST" }).handler(async ({ data }) => {
   const parsed = schema.safeParse(data);
-  if (!parsed.success) throw new Error("Dados inválidos. Verifique os campos.");
-  console.log("[Job Application]", JSON.stringify(parsed.data, null, 2));
-  return { success: true };
+  if (!parsed.success) {
+    return {
+      success: false,
+      message: "Dados inválidos. Verifique os campos e tente novamente.",
+    };
+  }
+
+  const missing = validateEnv();
+  if (missing.length > 0) {
+    console.error(`[submitApplication] Missing env vars: ${missing.join(", ")}`);
+    return {
+      success: false,
+      message:
+        "O formulário de candidatura está temporariamente indisponível. Tente novamente mais tarde.",
+    };
+  }
+
+  try {
+    await sendApplicationEmail(parsed.data);
+    return {
+      success: true,
+      message: "Candidatura enviada! Entraremos em contacto.",
+    };
+  } catch (error) {
+    console.error("[submitApplication] Failed to send email", error);
+    return {
+      success: false,
+      message: "Ocorreu um erro ao enviar a sua candidatura. Tente novamente mais tarde.",
+    };
+  }
 });
