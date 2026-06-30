@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,10 +12,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { SITE } from "@/lib/site";
+import { submitContactForm } from "@/server/contact-form";
 import port from "@/assets/hero-port.jpg";
 
 export const Route = createFileRoute("/contacto")({
@@ -28,7 +33,10 @@ export const Route = createFileRoute("/contacto")({
           "Fale connosco. Av. Olof Palme nº 798, 2º andar, Maputo, Moçambique. Email: roseair.geral@outlook.com.",
       },
       { property: "og:title", content: "Contacto — Roseair Logistics" },
-      { property: "og:description", content: "Telefone, email, WhatsApp e formulário directo para a nossa equipa." },
+      {
+        property: "og:description",
+        content: "Telefone, email, WhatsApp e formulário directo para a nossa equipa.",
+      },
     ],
   }),
   component: ContactPage,
@@ -47,8 +55,14 @@ type FormValues = z.infer<typeof schema>;
 
 function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
+  const hpRef = useRef<HTMLInputElement>(null);
   const {
-    register, handleSubmit, reset, setValue, watch, formState: { errors },
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { service: "", consent: undefined as unknown as true },
@@ -56,10 +70,15 @@ function ContactPage() {
 
   const onSubmit = async (data: FormValues) => {
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 700));
-    toast.success("Mensagem enviada! A nossa equipa responderá em breve.");
-    reset();
-    setSubmitting(false);
+    try {
+      await submitContactForm({ data: { ...data, _hp_: hpRef.current?.value ?? "" } });
+      toast.success("Mensagem enviada! A nossa equipa responderá em breve.");
+      reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -68,7 +87,14 @@ function ContactPage() {
         title="Fale Connosco"
         subtitle="Estamos prontos para discutir o seu próximo envio. Resposta em menos de 24 horas."
         image={port}
-        breadcrumb={<span><Link to="/" className="hover:text-white">Início</Link> / Contacto</span>}
+        breadcrumb={
+          <span>
+            <Link to="/" className="hover:text-white">
+              Início
+            </Link>{" "}
+            / Contacto
+          </span>
+        }
       />
 
       <section className="bg-background">
@@ -76,25 +102,33 @@ function ContactPage() {
           {/* Form */}
           <div className="bg-white rounded-2xl shadow-card border border-border p-6 md:p-10">
             <h2 className="text-2xl font-extrabold text-secondary">Envie-nos uma mensagem</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Os campos marcados com * são obrigatórios.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Os campos marcados com * são obrigatórios.
+            </p>
             <form onSubmit={handleSubmit(onSubmit)} className="mt-6 grid gap-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label htmlFor="name">Nome completo *</Label>
                   <Input id="name" {...register("name")} className="mt-1" />
-                  {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="email">Email *</Label>
                   <Input id="email" type="email" {...register("email")} className="mt-1" />
-                  {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>
+                  )}
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <Label htmlFor="phone">Telefone / WhatsApp *</Label>
                   <Input id="phone" {...register("phone")} className="mt-1" />
-                  {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
+                  {errors.phone && (
+                    <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="company">Empresa</Label>
@@ -103,8 +137,13 @@ function ContactPage() {
               </div>
               <div>
                 <Label>Tipo de serviço *</Label>
-                <Select value={watch("service")} onValueChange={(v) => setValue("service", v, { shouldValidate: true })}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Seleccione um serviço" /></SelectTrigger>
+                <Select
+                  value={watch("service")}
+                  onValueChange={(v) => setValue("service", v, { shouldValidate: true })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Seleccione um serviço" />
+                  </SelectTrigger>
                   <SelectContent>
                     {[
                       "Desembaraço Aduaneiro",
@@ -114,45 +153,94 @@ function ContactPage() {
                       "Importação & Exportação",
                       "Logística Integrada",
                       "Outro",
-                    ].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    ].map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                {errors.service && <p className="mt-1 text-xs text-destructive">{errors.service.message}</p>}
+                {errors.service && (
+                  <p className="mt-1 text-xs text-destructive">{errors.service.message}</p>
+                )}
               </div>
               <div>
                 <Label htmlFor="message">Mensagem *</Label>
                 <Textarea id="message" rows={5} {...register("message")} className="mt-1" />
-                {errors.message && <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>}
+                {errors.message && (
+                  <p className="mt-1 text-xs text-destructive">{errors.message.message}</p>
+                )}
               </div>
               <div className="flex items-start gap-2">
                 <Checkbox
                   id="consent"
                   checked={watch("consent") === true}
-                  onCheckedChange={(c) => setValue("consent", c === true ? true : (undefined as unknown as true), { shouldValidate: true })}
+                  onCheckedChange={(c) =>
+                    setValue("consent", c === true ? true : (undefined as unknown as true), {
+                      shouldValidate: true,
+                    })
+                  }
                 />
-                <Label htmlFor="consent" className="text-sm leading-snug font-normal cursor-pointer">
-                  Aceito a política de privacidade e o tratamento dos meus dados pela Roseair Logistics.
+                <Label
+                  htmlFor="consent"
+                  className="text-sm leading-snug font-normal cursor-pointer"
+                >
+                  Aceito a política de privacidade e o tratamento dos meus dados pela Roseair
+                  Logistics.
                 </Label>
               </div>
-              {errors.consent && <p className="-mt-2 text-xs text-destructive">{errors.consent.message}</p>}
-              <Button type="submit" size="lg" className="rounded-full w-full h-12 mt-2" disabled={submitting}>
-                {submitting ? "A enviar..." : <>Enviar Mensagem <Send className="ml-2 h-4 w-4" /></>}
+              {errors.consent && (
+                <p className="-mt-2 text-xs text-destructive">{errors.consent.message}</p>
+              )}
+              <input
+                ref={hpRef}
+                name="_hp_"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+              />
+              <Button
+                type="submit"
+                size="lg"
+                className="rounded-full w-full h-12 mt-2"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  "A enviar..."
+                ) : (
+                  <>
+                    Enviar Mensagem <Send className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
             </form>
           </div>
 
           {/* Info */}
           <div className="space-y-4">
-            <InfoItem Icon={MapPin} title="Morada">{SITE.address}</InfoItem>
+            <InfoItem Icon={MapPin} title="Morada">
+              {SITE.address}
+            </InfoItem>
             <InfoItem Icon={Phone} title="Telefone">
               {SITE.phones.map((p) => (
-                <a key={p} href={`tel:${p.replace(/\s/g, "")}`} className="block hover:text-primary">{p}</a>
+                <a
+                  key={p}
+                  href={`tel:${p.replace(/\s/g, "")}`}
+                  className="block hover:text-primary"
+                >
+                  {p}
+                </a>
               ))}
             </InfoItem>
             <InfoItem Icon={Mail} title="Email">
-              <a href={`mailto:${SITE.email}`} className="hover:text-primary break-all">{SITE.email}</a>
+              <a href={`mailto:${SITE.email}`} className="hover:text-primary break-all">
+                {SITE.email}
+              </a>
             </InfoItem>
-            <InfoItem Icon={Clock} title="Horário">{SITE.hours}</InfoItem>
+            <InfoItem Icon={Clock} title="Horário">
+              {SITE.hours}
+            </InfoItem>
             <a
               href={SITE.whatsappUrl()}
               target="_blank"
@@ -184,8 +272,14 @@ function ContactPage() {
 }
 
 function InfoItem({
-  Icon, title, children,
-}: { Icon: React.ComponentType<{ className?: string }>; title: string; children: React.ReactNode }) {
+  Icon,
+  title,
+  children,
+}: {
+  Icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="rounded-xl bg-white shadow-card border border-border p-5 flex gap-4">
       <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">

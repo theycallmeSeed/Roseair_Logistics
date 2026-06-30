@@ -1,5 +1,4 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useLocation } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
@@ -70,18 +69,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ScrollToTop() {
-  const location = useLocation();
-  useEffect(() => {
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [location.pathname]);
-  return null;
-}
-
 function RootComponent() {
   return (
     <>
-      <ScrollToTop />
       <Outlet />
       <Toaster richColors position="top-right" />
     </>

@@ -13,7 +13,8 @@ export function Footer() {
               <Logo variant="light" />
             </div>
             <p className="mt-4 text-sm text-white/70 leading-relaxed">
-              {SITE.tagline}. Soluções integradas de logística, transporte e desembaraço aduaneiro em Moçambique e na região SADC.
+              {SITE.tagline}. Soluções integradas de logística, transporte e desembaraço aduaneiro
+              em Moçambique e na região SADC.
             </p>
             <div className="mt-5 flex gap-3">
               {[
@@ -71,7 +72,11 @@ export function Footer() {
                 <Phone className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                 <span>
                   {SITE.phones.map((p) => (
-                    <a key={p} href={`tel:${p.replace(/\s/g, "")}`} className="block hover:text-white">
+                    <a
+                      key={p}
+                      href={`tel:${p.replace(/\s/g, "")}`}
+                      className="block hover:text-white"
+                    >
                       {p}
                     </a>
                   ))}
@@ -88,10 +93,12 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-white/60">
-          <p>© {new Date().getFullYear()} {SITE.name}. Todos os direitos reservados.</p>
+          <p>
+            © {new Date().getFullYear()} {SITE.name}. Todos os direitos reservados.
+          </p>
           <div className="flex gap-5">
-            <a href="#" className="hover:text-white">Política de Privacidade</a>
-            <a href="#" className="hover:text-white">Termos de Uso</a>
+            <span className="text-white/60">Política de Privacidade</span>
+            <span className="text-white/60">Termos de Uso</span>
           </div>
         </div>
       </div>
