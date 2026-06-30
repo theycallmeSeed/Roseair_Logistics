@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Mail,
   CheckCircle2,
+  MessageCircle,
   Car,
   Package,
 } from "lucide-react";
@@ -35,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { SITE } from "@/lib/site";
 import { submitProposalRequest } from "@/server/request-proposal";
 
 export const Route = createFileRoute("/simulador")({
@@ -256,6 +258,8 @@ function SimulatorPage() {
   const [proposalOpen, setProposalOpen] = useState(false);
   const [proposalForm, setProposalForm] = useState({ name: "", email: "", phone: "", company: "" });
   const [proposalSubmitting, setProposalSubmitting] = useState(false);
+  const [proposalSubmitted, setProposalSubmitted] = useState(false);
+  const submittedDataRef = useRef({ name: "", company: "", phone: "" });
   const hpRef = useRef<HTMLInputElement>(null);
 
   const result = useMemo(() => {
@@ -297,11 +301,31 @@ function SimulatorPage() {
       toast.error("Preencha nome, email e telefone");
       return;
     }
+    const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
     setProposalSubmitting(true);
     try {
-      await submitProposalRequest({ data: { ...proposalForm, _hp_: hpRef.current?.value ?? "" } });
+      await submitProposalRequest({
+        data: {
+          ...proposalForm,
+          _hp_: hpRef.current?.value ?? "",
+          origin,
+          destination,
+          currency,
+          exchangeRate,
+          fob,
+          declaredFreight,
+          cargoCategory: category?.label ?? "",
+          clearanceType,
+          ...(result ?? {}),
+        },
+      });
       toast.success("Pedido enviado! Entraremos em contacto em breve.");
-      setProposalOpen(false);
+      submittedDataRef.current = {
+        name: proposalForm.name,
+        company: proposalForm.company,
+        phone: proposalForm.phone,
+      };
+      setProposalSubmitted(true);
       setProposalForm({ name: "", email: "", phone: "", company: "" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
@@ -667,65 +691,139 @@ function SimulatorPage() {
         </div>
       </section>
 
-      <Dialog open={proposalOpen} onOpenChange={setProposalOpen}>
+      <Dialog
+        open={proposalOpen}
+        onOpenChange={(o) => {
+          if (!o) {
+            setProposalSubmitted(false);
+            setProposalOpen(false);
+          }
+        }}
+      >
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Receber proposta personalizada</DialogTitle>
-            <DialogDescription>
-              Deixe os seus contactos. A nossa equipa comercial responderá em menos de 24h.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={submitProposal} className="space-y-3">
-            <input
-              ref={hpRef}
-              name="_hp_"
-              type="text"
-              tabIndex={-1}
-              autoComplete="off"
-              style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
-            />
-            <div>
-              <Label htmlFor="pn">Nome *</Label>
-              <Input
-                id="pn"
-                value={proposalForm.name}
-                onChange={(e) => setProposalForm({ ...proposalForm, name: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="pe">Email *</Label>
-              <Input
-                id="pe"
-                type="email"
-                value={proposalForm.email}
-                onChange={(e) => setProposalForm({ ...proposalForm, email: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="pp">Telefone *</Label>
-              <Input
-                id="pp"
-                value={proposalForm.phone}
-                onChange={(e) => setProposalForm({ ...proposalForm, phone: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="pc">Empresa</Label>
-              <Input
-                id="pc"
-                value={proposalForm.company}
-                onChange={(e) => setProposalForm({ ...proposalForm, company: e.target.value })}
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="w-full" disabled={proposalSubmitting}>
-                {proposalSubmitting ? "A enviar..." : "Enviar Pedido"}
-              </Button>
-            </DialogFooter>
-          </form>
+          {proposalSubmitted ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Pedido Enviado</DialogTitle>
+                <DialogDescription>
+                  Recebemos a sua simulação. A nossa equipa comercial enviar-lhe-á uma proposta
+                  personalizada em breve.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4 text-center">
+                <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Enquanto aguarda, pode falar connosco directamente no WhatsApp para acelerar o
+                  processo.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  size="lg"
+                  className="rounded-full w-full"
+                  onClick={() => {
+                    const sd = submittedDataRef.current;
+                    const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
+                    const lines = [
+                      "Olá! Acabei de solicitar uma proposta personalizada através do simulador da Roseair Logistics.",
+                      "",
+                      `*Nome:* ${sd.name}`,
+                      sd.company ? `*Empresa:* ${sd.company}` : "",
+                      sd.phone ? `*Telefone:* ${sd.phone}` : "",
+                      origin ? `*Origem:* ${origin}` : "",
+                      destination ? `*Destino:* ${destination}` : "",
+                      category?.label ? `*Categoria:* ${category.label}` : "",
+                      currency ? `*Moeda:* ${currency}` : "",
+                      fob > 0 ? `*Valor FOB:* ${fmt(fob, currency ?? "USD")}` : "",
+                      result?.total != null ? `*Total Estimado:* ${fmt(result.total)}` : "",
+                    ]
+                      .filter(Boolean)
+                      .join("%0A");
+                    window.open(`https://wa.me/${SITE.whatsapp}?text=${lines}`, "_blank");
+                  }}
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Continuar no WhatsApp
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full w-full"
+                  onClick={() => {
+                    setProposalSubmitted(false);
+                    setProposalOpen(false);
+                  }}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Receber proposta personalizada</DialogTitle>
+                <DialogDescription>
+                  Deixe os seus contactos. A nossa equipa comercial responderá em menos de 24h.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={submitProposal} className="space-y-3">
+                <input
+                  ref={hpRef}
+                  name="_hp_"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  style={{
+                    position: "absolute",
+                    left: "-9999px",
+                    opacity: 0,
+                    height: 0,
+                    width: 0,
+                  }}
+                />
+                <div>
+                  <Label htmlFor="pn">Nome *</Label>
+                  <Input
+                    id="pn"
+                    value={proposalForm.name}
+                    onChange={(e) => setProposalForm({ ...proposalForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pe">Email *</Label>
+                  <Input
+                    id="pe"
+                    type="email"
+                    value={proposalForm.email}
+                    onChange={(e) => setProposalForm({ ...proposalForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pp">Telefone *</Label>
+                  <Input
+                    id="pp"
+                    value={proposalForm.phone}
+                    onChange={(e) => setProposalForm({ ...proposalForm, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="pc">Empresa</Label>
+                  <Input
+                    id="pc"
+                    value={proposalForm.company}
+                    onChange={(e) => setProposalForm({ ...proposalForm, company: e.target.value })}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="w-full" disabled={proposalSubmitting}>
+                    {proposalSubmitting ? "A enviar..." : "Enviar Pedido"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </SiteLayout>

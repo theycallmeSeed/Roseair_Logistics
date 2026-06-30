@@ -6,6 +6,25 @@ export interface ProposalFormInput {
   email: string;
   phone: string;
   company?: string;
+  origin?: string;
+  destination?: string;
+  currency?: string;
+  cargoCategory?: string;
+  clearanceType?: string;
+  declaredFreight?: string;
+  exchangeRate?: number;
+  fob?: number;
+  freight?: number;
+  insurance?: number;
+  cif?: number;
+  cifMt?: number;
+  da?: number;
+  ice?: number;
+  iva?: number;
+  sobretaxa?: number;
+  fee?: number;
+  totalTaxes?: number;
+  total?: number;
 }
 
 export async function sendProposalEmail(data: ProposalFormInput): Promise<void> {

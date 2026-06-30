@@ -153,10 +153,44 @@ interface ProposalNotificationData {
   email: string;
   phone: string;
   company?: string;
+  origin?: string;
+  destination?: string;
+  currency?: string;
+  cargoCategory?: string;
+  clearanceType?: string;
+  declaredFreight?: string;
+  exchangeRate?: number;
+  fob?: number;
+  freight?: number;
+  insurance?: number;
+  cif?: number;
+  cifMt?: number;
+  da?: number;
+  ice?: number;
+  iva?: number;
+  sobretaxa?: number;
+  fee?: number;
+  totalTaxes?: number;
+  total?: number;
+}
+
+const CLEARANCE_LABELS: Record<string, string> = {
+  normal: "Normal",
+  expresso: "Expresso",
+  prioritario: "Prioritário",
+};
+
+function sectionHeading(label: string): string {
+  return `<tr><td style="padding-bottom:4px"><h3 style="color:${NAVY};font-size:14px;margin:8px 0 0;border-bottom:1px solid #eee;padding-bottom:6px">${escapeHtml(label)}</h3></td></tr>`;
+}
+
+function fmtNum(val: number | undefined | null): string {
+  if (val == null) return "-";
+  return val.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function proposalNotificationHtml(data: ProposalNotificationData): string {
-  const rows = [
+  const customerRows = [
     fieldRow("Nome", data.name),
     fieldRow("Email", data.email),
     fieldRow("Telefone", data.phone),
@@ -166,12 +200,60 @@ export function proposalNotificationHtml(data: ProposalNotificationData): string
     .filter(Boolean)
     .join("");
 
+  const shipmentRows = [
+    data.origin ? fieldRow("Origem", data.origin) : "",
+    data.destination ? fieldRow("Destino", data.destination) : "",
+    data.cargoCategory ? fieldRow("Categoria da Mercadoria", data.cargoCategory) : "",
+    data.clearanceType
+      ? fieldRow("Tipo de Desembaraço", CLEARANCE_LABELS[data.clearanceType] ?? data.clearanceType)
+      : "",
+    data.declaredFreight
+      ? fieldRow("Frete Declarado", `${fmtNum(Number(data.declaredFreight))} USD`)
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  const financialRows = [
+    data.currency ? fieldRow("Moeda", data.currency) : "",
+    data.exchangeRate != null ? fieldRow("Taxa de Câmbio", fmtNum(data.exchangeRate)) : "",
+    data.fob != null ? fieldRow("Valor FOB", `${fmtNum(data.fob)} ${data.currency ?? "USD"}`) : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
+  const calcRows = [
+    data.freight != null ? fieldRow("Frete (estimado)", `${fmtNum(data.freight)} USD`) : "",
+    data.insurance != null ? fieldRow("Seguro (2%)", `${fmtNum(data.insurance)} USD`) : "",
+    data.cif != null ? fieldRow("Valor CIF", `${fmtNum(data.cif)} USD`) : "",
+    data.cifMt != null ? fieldRow("Valor CIF (MZN)", `${fmtNum(data.cifMt)} MZN`) : "",
+    data.da != null ? fieldRow("Direitos Aduaneiros (D.A.)", `${fmtNum(data.da)} MZN`) : "",
+    data.ice != null && data.ice > 0 ? fieldRow("ICE", `${fmtNum(data.ice)} MZN`) : "",
+    data.iva != null && data.iva > 0 ? fieldRow("IVA", `${fmtNum(data.iva)} MZN`) : "",
+    data.sobretaxa != null && data.sobretaxa > 0
+      ? fieldRow("Sobretaxa", `${fmtNum(data.sobretaxa)} MZN`)
+      : "",
+    data.fee != null ? fieldRow("Taxa de Desembaraço", `${fmtNum(data.fee)} MZN`) : "",
+    data.totalTaxes != null ? fieldRow("Total de Impostos", `${fmtNum(data.totalTaxes)} MZN`) : "",
+    data.total != null
+      ? fieldRow("Total Estimado", `<strong>${fmtNum(data.total)} MZN</strong>`)
+      : "",
+  ]
+    .filter(Boolean)
+    .join("");
+
   return layoutHtml(`
     <h2 style="color:${NAVY};margin:0 0 16px;font-size:20px">Pedido de Proposta</h2>
     <p style="margin:0 0 20px;color:#555">Um cliente solicitou uma proposta personalizada através do simulador.</p>
     <table cellpadding="0" cellspacing="0" style="width:100%">
-      <tr><td style="padding-bottom:4px"><h3 style="color:${NAVY};font-size:14px;margin:8px 0 0;border-bottom:1px solid #eee;padding-bottom:6px">Dados do Cliente</h3></td></tr>
-      ${rows}
+      ${sectionHeading("Dados do Cliente")}
+      ${customerRows}
+      ${shipmentRows ? sectionHeading("Dados do Envio") : ""}
+      ${shipmentRows}
+      ${financialRows ? sectionHeading("Dados Financeiros") : ""}
+      ${financialRows}
+      ${calcRows ? sectionHeading("Resultado do Cálculo") : ""}
+      ${calcRows}
     </table>`);
 }
 
