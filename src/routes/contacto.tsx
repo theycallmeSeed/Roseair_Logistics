@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { SITE } from "@/lib/site";
 import { submitContactForm } from "@/server/contact-form";
+import { FormSuccess } from "@/components/FormSuccess";
 import port from "@/assets/hero-port.jpg";
 
 export const Route = createFileRoute("/contacto")({
@@ -55,6 +56,7 @@ type FormValues = z.infer<typeof schema>;
 
 function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const hpRef = useRef<HTMLInputElement>(null);
   const {
     register,
@@ -72,7 +74,8 @@ function ContactPage() {
     setSubmitting(true);
     try {
       await submitContactForm({ data: { ...data, _hp_: hpRef.current?.value ?? "" } });
-      toast.success("Mensagem enviada! A nossa equipa responderá em breve.");
+      toast.success("Mensagem enviada!");
+      setSubmitted(true);
       reset();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
@@ -101,6 +104,13 @@ function ContactPage() {
         <div className="mx-auto max-w-7xl container-px py-16 grid gap-10 lg:grid-cols-[1.2fr_1fr]">
           {/* Form */}
           <div className="bg-white rounded-2xl shadow-card border border-border p-6 md:p-10">
+            {submitted ? (
+              <FormSuccess
+                message="Recebemos a sua mensagem. Entraremos em contacto em breve."
+                onClose={() => setSubmitted(false)}
+              />
+            ) : (
+            <>
             <h2 className="text-2xl font-extrabold text-secondary">Envie-nos uma mensagem</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Os campos marcados com * são obrigatórios.
@@ -218,6 +228,8 @@ function ContactPage() {
                 )}
               </Button>
             </form>
+            </>
+            )}
           </div>
 
           {/* Info */}

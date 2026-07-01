@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { useEffect } from "react";
 import {
   FileCheck2, Ship, Plane, Truck, Globe2, Warehouse, ArrowRight, Check,
 } from "lucide-react";
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/servicos")({
 
 const services = [
   {
+    id: "desembaraco-aduaneiro",
     icon: FileCheck2,
     title: "Desembaraço Aduaneiro",
     desc: "A Roseair Logistics oferece serviços completos de desembaraço aduaneiro, cobrindo todos os terminais rodoviários, marítimos, aéreos e postais a nível nacional.",
@@ -44,6 +46,7 @@ const services = [
     ],
   },
   {
+    id: "transporte-maritimo",
     icon: Ship,
     title: "Transporte Marítimo",
     desc: "Soluções FCL e LCL através dos principais portos de Moçambique — Maputo, Beira (o maior corredor estratégico de trânsito internacional) e Nacala.",
@@ -55,6 +58,7 @@ const services = [
     ],
   },
   {
+    id: "transporte-aereo",
     icon: Plane,
     title: "Transporte Aéreo",
     desc: "Expansão dos serviços de transporte aéreo de carga através de uma nova parceria estratégica, oferecendo soluções rápidas e seguras com eficiência inigualável.",
@@ -66,6 +70,7 @@ const services = [
     ],
   },
   {
+    id: "transporte-terrestre",
     icon: Truck,
     title: "Transporte Terrestre",
     desc: "Parcerias estratégicas com transportadoras de elevada reputação para transporte rodoviário nacional e internacional na região SADC.",
@@ -77,6 +82,7 @@ const services = [
     ],
   },
   {
+    id: "importacao-exportacao",
     icon: Globe2,
     title: "Importação & Exportação",
     desc: "Gestão integrada de processos de importação e exportação, com conhecimento profundo de regimes aduaneiros e consultoria especializada em comércio internacional.",
@@ -88,6 +94,7 @@ const services = [
     ],
   },
   {
+    id: "logistica-integradada",
     icon: Warehouse,
     title: "Logística Integrada & Armazenagem",
     desc: "Política door-to-door cobrindo todo o fluxo desde o fornecedor ao cliente final, com armazéns alfandegados monitorados 24/7 com tecnologia de ponta.",
@@ -120,6 +127,19 @@ const faqs = [
 ];
 
 function ServicesPage() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash) {
+      const id = hash.replace("#", "");
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      }
+    }
+  }, [location.hash]);
+
   return (
     <SiteLayout>
       <PageHero
@@ -146,7 +166,7 @@ function ServicesPage() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             {services.map((s) => (
-              <Card key={s.title} className="border border-border shadow-card hover:shadow-card-hover transition-all">
+              <Card key={s.title} id={s.id} className="border border-border shadow-card hover:shadow-card-hover transition-all scroll-mt-28">
                 <CardContent className="p-7">
                   <div className="flex items-center gap-4">
                     <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -164,7 +184,7 @@ function ServicesPage() {
                     ))}
                   </ul>
                   <Button asChild variant="outline" className="mt-6 rounded-full">
-                    <Link to="/simulador">Pedir Cotação para este Serviço <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                    <Link to="/simulador" search={{ service: s.title }}>Pedir Cotação para este Serviço <ArrowRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
                 </CardContent>
               </Card>

@@ -38,8 +38,16 @@ import {
 import { toast } from "sonner";
 import { SITE } from "@/lib/site";
 import { submitProposalRequest } from "@/server/request-proposal";
+import { FormSuccess } from "@/components/FormSuccess";
+
+import { z } from "zod";
+
+const simulatorSearchSchema = z.object({
+  service: z.string().optional(),
+});
 
 export const Route = createFileRoute("/simulador")({
+  validateSearch: simulatorSearchSchema.parse,
   head: () => ({
     meta: [
       { title: "Simulador de Desembaraço Aduaneiro — Roseair Logistics" },
@@ -242,6 +250,7 @@ function calcCustoms(
 }
 
 function SimulatorPage() {
+  const { service: preselectedService } = Route.useSearch();
   const [step, setStep] = useState(1);
   const [group, setGroup] = useState<"geral" | "veiculos" | null>(null);
 
@@ -259,7 +268,7 @@ function SimulatorPage() {
   const [proposalForm, setProposalForm] = useState({ name: "", email: "", phone: "", company: "" });
   const [proposalSubmitting, setProposalSubmitting] = useState(false);
   const [proposalSubmitted, setProposalSubmitted] = useState(false);
-  const submittedDataRef = useRef({ name: "", company: "", phone: "" });
+  const submittedDataRef = useRef({ name: "", company: "", phone: "", email: "" });
   const hpRef = useRef<HTMLInputElement>(null);
 
   const result = useMemo(() => {
@@ -316,14 +325,16 @@ function SimulatorPage() {
           declaredFreight,
           cargoCategory: category?.label ?? "",
           clearanceType,
+          preselectedService: preselectedService ?? "",
           ...(result ?? {}),
         },
       });
-      toast.success("Pedido enviado! Entraremos em contacto em breve.");
+      toast.success("Pedido enviado!");
       submittedDataRef.current = {
         name: proposalForm.name,
         company: proposalForm.company,
         phone: proposalForm.phone,
+        email: proposalForm.email,
       };
       setProposalSubmitted(true);
       setProposalForm({ name: "", email: "", phone: "", company: "" });
@@ -710,52 +721,41 @@ function SimulatorPage() {
                   personalizada em breve.
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4 text-center">
-                <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Enquanto aguarda, pode falar connosco directamente no WhatsApp para acelerar o
-                  processo.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Button
-                  size="lg"
-                  className="rounded-full w-full"
-                  onClick={() => {
-                    const sd = submittedDataRef.current;
-                    const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
-                    const lines = [
-                      "Olá! Acabei de solicitar uma proposta personalizada através do simulador da Roseair Logistics.",
-                      "",
-                      `*Nome:* ${sd.name}`,
-                      sd.company ? `*Empresa:* ${sd.company}` : "",
-                      sd.phone ? `*Telefone:* ${sd.phone}` : "",
-                      origin ? `*Origem:* ${origin}` : "",
-                      destination ? `*Destino:* ${destination}` : "",
-                      category?.label ? `*Categoria:* ${category.label}` : "",
-                      currency ? `*Moeda:* ${currency}` : "",
-                      fob > 0 ? `*Valor FOB:* ${fmt(fob, currency ?? "USD")}` : "",
-                      result?.total != null ? `*Total Estimado:* ${fmt(result.total)}` : "",
-                    ]
-                      .filter(Boolean)
-                      .join("%0A");
-                    window.open(`https://wa.me/${SITE.whatsapp}?text=${lines}`, "_blank");
-                  }}
-                >
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  Continuar no WhatsApp
-                </Button>
-                <Button
-                  variant="outline"
-                  className="rounded-full w-full"
-                  onClick={() => {
-                    setProposalSubmitted(false);
-                    setProposalOpen(false);
-                  }}
-                >
-                  Fechar
-                </Button>
-              </div>
+              <FormSuccess
+                message="Recebemos os dados da sua simulação com sucesso."
+                onClose={() => {
+                  setProposalSubmitted(false);
+                  setProposalOpen(false);
+                }}
+              />
+              <Button
+                size="lg"
+                className="rounded-full w-full mt-2"
+                onClick={() => {
+                  const sd = submittedDataRef.current;
+                  const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
+                  const lines = [
+                    "Olá! Acabei de solicitar uma proposta personalizada através do simulador da Roseair Logistics.",
+                    "",
+                    `*Nome:* ${sd.name}`,
+                    sd.company ? `*Empresa:* ${sd.company}` : "",
+                    sd.phone ? `*Telefone:* ${sd.phone}` : "",
+                    sd.email ? `*Email:* ${sd.email}` : "",
+                    origin ? `*Origem:* ${origin}` : "",
+                    destination ? `*Destino:* ${destination}` : "",
+                    category?.label ? `*Categoria:* ${category.label}` : "",
+                    currency ? `*Moeda:* ${currency}` : "",
+                    fob > 0 ? `*Valor FOB:* ${fmt(fob, currency ?? "USD")}` : "",
+                    result?.total != null ? `*Total Estimado:* ${fmt(result.total)}` : "",
+                  ]
+                    .filter(Boolean)
+                    .join("%0A");
+                  window.open(`https://wa.me/${SITE.whatsapp}?text=${lines}`, "_blank");
+                }}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Continuar no WhatsApp
+              </Button>
             </>
           ) : (
             <>

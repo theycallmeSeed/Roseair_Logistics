@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { submitApplication } from "@/server/job-application";
+import { FormSuccess } from "@/components/FormSuccess";
 import aboutTeam from "@/assets/about-team.jpg";
 
 export const Route = createFileRoute("/equipa")({
@@ -92,6 +93,7 @@ function TeamPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "", message: "" });
   const [submittingForm, setSubmittingForm] = useState(false);
+  const [submittedApp, setSubmittedApp] = useState(false);
   const hpRef = useRef<HTMLInputElement>(null);
 
   const submit = async (e: React.FormEvent) => {
@@ -103,8 +105,8 @@ function TeamPage() {
     setSubmittingForm(true);
     try {
       await submitApplication({ data: { ...form, _hp_: hpRef.current?.value ?? "" } });
-      toast.success("Candidatura enviada! Entraremos em contacto.");
-      setOpen(false);
+      toast.success("Candidatura enviada!");
+      setSubmittedApp(true);
       setForm({ name: "", email: "", role: "", message: "" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
@@ -172,8 +174,36 @@ function TeamPage() {
         </div>
       </section>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) {
+            setOpen(false);
+            setSubmittedApp(false);
+          }
+        }}
+      >
         <DialogContent>
+          {submittedApp ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Candidatura Enviada</DialogTitle>
+                <DialogDescription>
+                  Recebemos a sua candidatura. Entraremos em contacto caso o seu perfil
+                  corresponda às nossas necessidades.
+                </DialogDescription>
+              </DialogHeader>
+              <FormSuccess
+                message="A sua candidatura foi registada com sucesso."
+                responseTime="Entraremos em contacto em até 5 dias úteis."
+                onClose={() => {
+                  setSubmittedApp(false);
+                  setOpen(false);
+                }}
+              />
+            </>
+          ) : (
+            <>
           <DialogHeader>
             <DialogTitle>Candidatura espontânea</DialogTitle>
             <DialogDescription>
@@ -227,6 +257,8 @@ function TeamPage() {
               </Button>
             </DialogFooter>
           </form>
+          </>
+          )}
         </DialogContent>
       </Dialog>
     </SiteLayout>

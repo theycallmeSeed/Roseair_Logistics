@@ -63,6 +63,7 @@ const services = [
     icon: FileCheck2,
     title: "Desembaraço Aduaneiro",
     desc: "Processos completos em todos os terminais rodoviários, marítimos, aéreos e postais nacionais.",
+    anchor: "desembaraco-aduaneiro",
   },
   {
     icon: Truck,
@@ -73,6 +74,7 @@ const services = [
     icon: Boxes,
     title: "Importação & Exportação",
     desc: "Gestão integrada de regimes aduaneiros, trânsito e consultoria especializada.",
+    anchor: "importacao-exportacao",
   },
   {
     icon: Shield,
@@ -221,6 +223,7 @@ function HomePage() {
                     <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
                     <Link
                       to="/servicos"
+                      hash={s.anchor ? `#${s.anchor}` : undefined}
                       className="mt-4 inline-flex items-center text-sm font-semibold text-primary hover:gap-2 transition-all gap-1"
                     >
                       Saber mais <ArrowRight className="h-4 w-4" />
