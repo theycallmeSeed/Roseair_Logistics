@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layers,
@@ -38,6 +38,15 @@ import {
 import { toast } from "sonner";
 import { SITE } from "@/lib/site";
 import { submitProposalRequest } from "@/server/request-proposal";
+import {
+  TAX_CATEGORIES,
+  categoriesByGroup,
+  CLEARANCE_LABELS,
+  CLEARANCE_FEES,
+  type ClearanceType,
+  type Currency,
+} from "@/lib/customs-categories";
+import { calculateCustoms, type CalculationResult } from "@/lib/calculation-engine";
 
 export const Route = createFileRoute("/simulador")({
   head: () => ({
@@ -58,188 +67,17 @@ export const Route = createFileRoute("/simulador")({
   component: SimulatorPage,
 });
 
-type Currency = "USD" | "MZN" | "ZAR";
-type ClearanceType = "normal" | "expresso" | "prioritario";
-
-type TaxConfig = {
-  id: string;
-  label: string;
-  group: "geral" | "veiculos";
-  da: number;
-  ice?: number;
-  iva?: number;
-  sobretaxa?: number;
+const FMT_CURRENCIES: Record<Currency, string> = {
+  USD: "USD",
+  MZN: "MZN",
+  ZAR: "ZAR",
 };
 
-const TAX_CATEGORIES: TaxConfig[] = [
-  // GENERAL
-  { id: "g_construcao", group: "geral", label: "Material de construção", da: 0.075, iva: 0.16 },
-  { id: "g_eletrico", group: "geral", label: "Material elétrico", da: 0.075, iva: 0.16 },
-  { id: "g_mobilia", group: "geral", label: "Mobília e móveis", da: 0.2, iva: 0.16 },
-  { id: "g_maquinas", group: "geral", label: "Máquinas e equipamentos", da: 0.05, iva: 0.16 },
-  { id: "g_textil", group: "geral", label: "Material têxtil", da: 0.2, iva: 0.16 },
-  // VEHICLES
-  {
-    id: "v_pass_diesel_10",
-    group: "veiculos",
-    label: "Transporte passageiros diesel (10+)",
-    da: 0.05,
-    iva: 0.16,
-  },
-  {
-    id: "v_pass_gas_10",
-    group: "veiculos",
-    label: "Transporte passageiros gasolina (10+)",
-    da: 0.05,
-    ice: 0.3,
-    iva: 0.16,
-  },
-  {
-    id: "v_gas_1000",
-    group: "veiculos",
-    label: "Gasolina até 1000cc",
-    da: 0.2,
-    ice: 0.05,
-    iva: 0.16,
-  },
-  {
-    id: "v_gas_1500",
-    group: "veiculos",
-    label: "Gasolina 1000cc–1500cc",
-    da: 0.2,
-    ice: 0.1,
-    iva: 0.16,
-  },
-  {
-    id: "v_gas_1500_plus",
-    group: "veiculos",
-    label: "Gasolina acima 1500cc",
-    da: 0.2,
-    ice: 0.3,
-    iva: 0.16,
-  },
-  {
-    id: "v_diesel_1500",
-    group: "veiculos",
-    label: "Diesel até 1500cc",
-    da: 0.2,
-    ice: 0.1,
-    iva: 0.16,
-  },
-  {
-    id: "v_diesel_1500_plus",
-    group: "veiculos",
-    label: "Diesel acima 1500cc",
-    da: 0.2,
-    ice: 0.3,
-    iva: 0.16,
-  },
-  { id: "v_hibridos", group: "veiculos", label: "Híbridos", da: 0.2, ice: 0.3, iva: 0.16 },
-  {
-    id: "v_merc_diesel_5t",
-    group: "veiculos",
-    label: "Mercadorias diesel até 5 toneladas",
-    da: 0.05,
-    iva: 0,
-  },
-  {
-    id: "v_merc_diesel_5t_plus",
-    group: "veiculos",
-    label: "Mercadorias diesel acima 5 toneladas",
-    da: 0.05,
-    iva: 0.16,
-  },
-  {
-    id: "v_merc_diesel_est",
-    group: "veiculos",
-    label: "Mercadorias diesel cabine estendida",
-    da: 0.05,
-    iva: 0.16,
-  },
-  {
-    id: "v_merc_diesel_dupla",
-    group: "veiculos",
-    label: "Mercadorias diesel cabine dupla",
-    da: 0.05,
-    ice: 0.3,
-    iva: 0.16,
-  },
-  {
-    id: "v_merc_gas_5t",
-    group: "veiculos",
-    label: "Mercadorias gasolina até 5 toneladas",
-    da: 0.05,
-    iva: 0.16,
-  },
-  {
-    id: "v_merc_gas_5t_plus",
-    group: "veiculos",
-    label: "Mercadorias gasolina acima 5 toneladas",
-    da: 0.05,
-    iva: 0.16,
-  },
-  {
-    id: "v_merc_gas_est",
-    group: "veiculos",
-    label: "Mercadorias gasolina cabine estendida",
-    da: 0.05,
-    iva: 0.16,
-  },
-  {
-    id: "v_merc_gas_dupla",
-    group: "veiculos",
-    label: "Mercadorias gasolina cabine dupla",
-    da: 0.05,
-    ice: 0.3,
-    iva: 0.16,
-  },
-  { id: "v_merc_hibridas", group: "veiculos", label: "Mercadorias híbridas", da: 0.05, iva: 0.16 },
-  { id: "v_especiais", group: "veiculos", label: "Veículos especiais", da: 0.05, iva: 0.16 },
-];
-
-function calcCustoms(
-  fob: number,
-  declaredFreight: number | null,
-  exchangeRate: number,
-  categoryId: string,
-  clearanceType: ClearanceType,
-) {
-  const cat = TAX_CATEGORIES.find((c) => c.id === categoryId);
-  if (!cat) return null;
-
-  const freight = declaredFreight !== null ? declaredFreight : fob * 0.1;
-  const insurance = (fob + freight) * 0.02;
-  const cif = fob + freight + insurance;
-  const cifMt = cif * exchangeRate;
-
-  const da = cifMt * cat.da;
-  const ice = cat.ice ? cifMt * cat.ice : 0;
-  const iva = cat.iva ? (cifMt + da + ice) * cat.iva : 0;
-  const sobretaxa = cat.sobretaxa ? cif * cat.sobretaxa * exchangeRate : 0;
-
-  let fee = 0;
-  if (clearanceType === "normal") fee = 2500;
-  else if (clearanceType === "expresso") fee = 7500;
-  else if (clearanceType === "prioritario") fee = 15000;
-
-  const totalTaxes = da + ice + iva + sobretaxa;
-  const total = cifMt + totalTaxes + fee;
-
-  return {
-    fob,
-    freight,
-    insurance,
-    cif,
-    cifMt,
-    da,
-    ice,
-    iva,
-    sobretaxa,
-    fee,
-    totalTaxes,
-    total,
-  };
-}
+const EXCHANGE_RATES: Record<Currency, number> = {
+  USD: 63.2,
+  MZN: 1,
+  ZAR: 3.5,
+};
 
 function SimulatorPage() {
   const [step, setStep] = useState(1);
@@ -250,7 +88,8 @@ function SimulatorPage() {
   const [currency, setCurrency] = useState<Currency>("USD");
   const [exchangeRate, setExchangeRate] = useState(63.2);
   const [fob, setFob] = useState(10000);
-  const [declaredFreight, setDeclaredFreight] = useState<string>("");
+  const [freightDeclaredOnInvoice, setFreightDeclaredOnInvoice] = useState(false);
+  const [declaredFreight, setDeclaredFreight] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [clearanceType, setClearanceType] = useState<ClearanceType>("normal");
 
@@ -262,19 +101,28 @@ function SimulatorPage() {
   const submittedDataRef = useRef({ name: "", company: "", phone: "" });
   const hpRef = useRef<HTMLInputElement>(null);
 
-  const result = useMemo(() => {
+  const result: CalculationResult | null = useMemo(() => {
     if (!categoryId) return null;
-    const freightVal = declaredFreight !== "" ? Number(declaredFreight) : null;
-    return calcCustoms(fob, freightVal, exchangeRate, categoryId, clearanceType);
-  }, [fob, declaredFreight, exchangeRate, categoryId, clearanceType]);
+    return calculateCustoms({
+      fob,
+      freightDeclaredOnInvoice,
+      freightValue: declaredFreight !== "" ? Number(declaredFreight) : undefined,
+      exchangeRate,
+      categoryId,
+      clearanceType,
+    });
+  }, [fob, freightDeclaredOnInvoice, declaredFreight, exchangeRate, categoryId, clearanceType]);
 
-  const validateStep2 = () => {
+  const validateStep2 = (): boolean => {
     const e: Record<string, string> = {};
     if (!origin.trim()) e.origin = "Indique a origem";
     if (!destination.trim()) e.destination = "Indique o destino";
     if (fob <= 0) e.fob = "Valor FOB deve ser maior que zero";
     if (exchangeRate <= 0) e.exchangeRate = "Taxa de câmbio inválida";
     if (!categoryId) e.categoryId = "Selecione a categoria de mercadoria";
+    if (freightDeclaredOnInvoice && (declaredFreight === "" || Number(declaredFreight) <= 0)) {
+      e.freight = "Indique o valor do frete declarado na factura";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -292,7 +140,24 @@ function SimulatorPage() {
     setStep(1);
     setGroup(null);
     setCategoryId("");
+    setOrigin("");
+    setDestination("Maputo, Moçambique");
+    setCurrency("USD");
+    setExchangeRate(63.2);
+    setFob(10000);
+    setFreightDeclaredOnInvoice(false);
+    setDeclaredFreight("");
+    setClearanceType("normal");
     setErrors({});
+  };
+
+  const handleCurrencyChange = (v: string) => {
+    const cur = v as Currency;
+    setCurrency(cur);
+    setExchangeRate(EXCHANGE_RATES[cur]);
+    setFob(0);
+    setDeclaredFreight("");
+    setFreightDeclaredOnInvoice(false);
   };
 
   const submitProposal = async (e: React.FormEvent) => {
@@ -304,7 +169,7 @@ function SimulatorPage() {
     const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
     setProposalSubmitting(true);
     try {
-      await submitProposalRequest({
+      const response = await submitProposalRequest({
         data: {
           ...proposalForm,
           _hp_: hpRef.current?.value ?? "",
@@ -313,20 +178,25 @@ function SimulatorPage() {
           currency,
           exchangeRate,
           fob,
+          freightDeclaredOnInvoice,
           declaredFreight,
           cargoCategory: category?.label ?? "",
           clearanceType,
           ...(result ?? {}),
         },
       });
-      toast.success("Pedido enviado! Entraremos em contacto em breve.");
-      submittedDataRef.current = {
-        name: proposalForm.name,
-        company: proposalForm.company,
-        phone: proposalForm.phone,
-      };
-      setProposalSubmitted(true);
-      setProposalForm({ name: "", email: "", phone: "", company: "" });
+      if (response.success) {
+        toast.success("Pedido enviado! Entraremos em contacto em breve.");
+        submittedDataRef.current = {
+          name: proposalForm.name,
+          company: proposalForm.company,
+          phone: proposalForm.phone,
+        };
+        setProposalSubmitted(true);
+        setProposalForm({ name: "", email: "", phone: "", company: "" });
+      } else {
+        toast.error(response.message ?? "Erro ao enviar. Tente novamente.");
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
     } finally {
@@ -344,11 +214,13 @@ function SimulatorPage() {
     { id: "veiculos", label: "Veículos", Icon: Car, desc: "Ligeiros, pesados e especiais" },
   ] as const;
 
-  const filteredCategories = TAX_CATEGORIES.filter((c) => c.group === group);
+  const filteredCategories = group ? categoriesByGroup(group) : [];
 
   const fmt = (val: number, cur: string = "MZN") => {
     return new Intl.NumberFormat("pt-PT", { style: "currency", currency: cur }).format(val);
   };
+
+  const hasIce = result && result.ice > 0;
 
   return (
     <SiteLayout>
@@ -369,7 +241,6 @@ function SimulatorPage() {
 
       <section className="bg-background">
         <div className="mx-auto max-w-4xl container-px py-12">
-          {/* Disclaimer */}
           <div className="rounded-lg border-l-4 border-yellow-400 bg-yellow-50 p-4 flex gap-3 text-sm">
             <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
             <p className="text-yellow-900 leading-relaxed">
@@ -470,16 +341,7 @@ function SimulatorPage() {
                 <div className="grid gap-5 md:grid-cols-3">
                   <div>
                     <Label htmlFor="currency">Moeda</Label>
-                    <Select
-                      value={currency}
-                      onValueChange={(v) => {
-                        const cur = v as Currency;
-                        setCurrency(cur);
-                        if (cur === "MZN") setExchangeRate(1);
-                        else if (cur === "USD") setExchangeRate(63.2);
-                        else if (cur === "ZAR") setExchangeRate(3.5);
-                      }}
-                    >
+                    <Select value={currency} onValueChange={handleCurrencyChange}>
                       <SelectTrigger id="currency" className="mt-1">
                         <SelectValue />
                       </SelectTrigger>
@@ -521,21 +383,50 @@ function SimulatorPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-5 md:grid-cols-2">
-                  <div>
-                    <Label htmlFor="freight">
-                      Frete Declarado ({currency}) -{" "}
-                      <span className="text-muted-foreground font-normal">Opcional</span>
-                    </Label>
-                    <Input
-                      id="freight"
-                      type="number"
-                      value={declaredFreight}
-                      onChange={(e) => setDeclaredFreight(e.target.value)}
-                      className="mt-1"
-                      placeholder="Deixe vazio para usar 10% do FOB"
+                {/* Frete: declarado na factura ou FOB × 10% */}
+                <div className="rounded-lg border border-border p-4 bg-white space-y-3">
+                  <div className="flex items-start gap-3">
+                    <input
+                      id="freight-declared"
+                      type="checkbox"
+                      checked={freightDeclaredOnInvoice}
+                      onChange={(e) => {
+                        setFreightDeclaredOnInvoice(e.target.checked);
+                        if (!e.target.checked) setDeclaredFreight("");
+                      }}
+                      className="mt-1 h-4 w-4 rounded border-primary text-primary focus:ring-primary"
                     />
+                    <div>
+                      <Label htmlFor="freight-declared" className="font-semibold cursor-pointer">
+                        Frete declarado na factura
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Se desmarcado, será usado {currency === "MZN" ? "10%" : "10% do valor FOB"}{" "}
+                        como frete estimado.
+                      </p>
+                    </div>
                   </div>
+                  {freightDeclaredOnInvoice && (
+                    <div>
+                      <Label htmlFor="freight">Valor do Frete ({currency})</Label>
+                      <Input
+                        id="freight"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={declaredFreight}
+                        onChange={(e) => setDeclaredFreight(e.target.value)}
+                        className="mt-1"
+                        placeholder="Ex: 500"
+                      />
+                      {errors.freight && (
+                        <p className="text-xs text-destructive mt-1">{errors.freight}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid gap-5 md:grid-cols-2">
                   <div>
                     <Label htmlFor="category">Categoria da Mercadoria</Label>
                     <Select value={categoryId} onValueChange={setCategoryId}>
@@ -557,30 +448,29 @@ function SimulatorPage() {
                       <p className="text-xs text-destructive mt-1">{errors.categoryId}</p>
                     )}
                   </div>
-                </div>
-
-                <div>
-                  <Label>Tipo de Desembaraço</Label>
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {[
-                      { v: "normal", l: "Normal", d: "Padrão" },
-                      { v: "expresso", l: "Expresso", d: "Rápido" },
-                      { v: "prioritario", l: "Prioritário", d: "Urgente" },
-                    ].map((o) => (
-                      <button
-                        key={o.v}
-                        type="button"
-                        onClick={() => setClearanceType(o.v as ClearanceType)}
-                        className={`text-left rounded-lg border p-3 cursor-pointer hover:border-primary transition-all ${
-                          clearanceType === o.v
-                            ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
-                            : "border-border"
-                        }`}
-                      >
-                        <div className="text-sm font-bold text-secondary">{o.l}</div>
-                        <div className="text-xs text-muted-foreground mt-0.5">{o.d}</div>
-                      </button>
-                    ))}
+                  <div>
+                    <Label>Tipo de Desembaraço</Label>
+                    <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {(["normal", "expresso", "prioritario"] as const).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setClearanceType(v)}
+                          className={`text-left rounded-lg border p-3 cursor-pointer hover:border-primary transition-all ${
+                            clearanceType === v
+                              ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+                              : "border-border"
+                          }`}
+                        >
+                          <div className="text-sm font-bold text-secondary">
+                            {CLEARANCE_LABELS[v]}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {CLEARANCE_FEES[v].toLocaleString("pt-PT")} MZN
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -608,15 +498,12 @@ function SimulatorPage() {
                         Valores Base
                       </h3>
                       <Row label="Valor FOB" value={fmt(result.fob, currency)} />
-                      <Row
-                        label="Frete (Estimado/Declarado)"
-                        value={fmt(result.freight, currency)}
-                      />
+                      <Row label="Frete" value={fmt(result.freight, currency)} />
                       <Row label="Seguro (2%)" value={fmt(result.insurance, currency)} />
                       <div className="border-t border-white/15 pt-2 mt-2">
                         <Row label="Valor CIF" value={fmt(result.cif, currency)} />
                         <Row
-                          label="Valor CIF (Base de Cálculo)"
+                          label="Valor CIF (base de cálculo em MZN)"
                           value={fmt(result.cifMt)}
                           highlight
                         />
@@ -629,13 +516,12 @@ function SimulatorPage() {
                         Impostos e Taxas (MZN)
                       </h3>
                       <Row label="Direitos Aduaneiros (D.A.)" value={fmt(result.da)} />
-                      {result.ice > 0 && <Row label="ICE" value={fmt(result.ice)} />}
+                      {hasIce && <Row label="ICE" value={fmt(result.ice)} />}
                       {result.iva > 0 && <Row label="IVA" value={fmt(result.iva)} />}
                       {result.sobretaxa > 0 && (
                         <Row label="Sobretaxa" value={fmt(result.sobretaxa)} />
                       )}
-                      <Row label="Taxa Administrativa/Desembaraço" value={fmt(result.fee)} />
-
+                      <Row label="Taxa de Desembaraço" value={fmt(result.fee)} />
                       <div className="border-t border-white/15 pt-2 mt-2">
                         <Row
                           label="Total de Impostos e Taxas"
@@ -660,7 +546,11 @@ function SimulatorPage() {
                   <Button
                     size="lg"
                     className="rounded-full px-7 h-12"
-                    onClick={() => setProposalOpen(true)}
+                    onClick={() => {
+                      setProposalForm({ name: "", email: "", phone: "", company: "" });
+                      setProposalSubmitted(false);
+                      setProposalOpen(true);
+                    }}
                   >
                     <Mail className="mr-2 h-4 w-4" /> Receber Proposta Real
                   </Button>
@@ -697,6 +587,7 @@ function SimulatorPage() {
           if (!o) {
             setProposalSubmitted(false);
             setProposalOpen(false);
+            setProposalForm({ name: "", email: "", phone: "", company: "" });
           }
         }}
       >
@@ -751,6 +642,7 @@ function SimulatorPage() {
                   onClick={() => {
                     setProposalSubmitted(false);
                     setProposalOpen(false);
+                    setProposalForm({ name: "", email: "", phone: "", company: "" });
                   }}
                 >
                   Fechar

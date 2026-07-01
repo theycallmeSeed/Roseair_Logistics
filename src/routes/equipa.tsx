@@ -102,10 +102,16 @@ function TeamPage() {
     }
     setSubmittingForm(true);
     try {
-      await submitApplication({ data: { ...form, _hp_: hpRef.current?.value ?? "" } });
-      toast.success("Candidatura enviada! Entraremos em contacto.");
-      setOpen(false);
-      setForm({ name: "", email: "", role: "", message: "" });
+      const response = await submitApplication({
+        data: { ...form, _hp_: hpRef.current?.value ?? "" },
+      });
+      if (response.success) {
+        toast.success("Candidatura enviada! Entraremos em contacto.");
+        setOpen(false);
+        setForm({ name: "", email: "", role: "", message: "" });
+      } else {
+        toast.error(response.message ?? "Erro ao enviar. Tente novamente.");
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
     } finally {

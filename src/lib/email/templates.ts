@@ -174,6 +174,8 @@ interface ProposalNotificationData {
   total?: number;
 }
 
+const CUR = (data: ProposalNotificationData): string => data.currency ?? "USD";
+
 const CLEARANCE_LABELS: Record<string, string> = {
   normal: "Normal",
   expresso: "Expresso",
@@ -208,7 +210,7 @@ export function proposalNotificationHtml(data: ProposalNotificationData): string
       ? fieldRow("Tipo de Desembaraço", CLEARANCE_LABELS[data.clearanceType] ?? data.clearanceType)
       : "",
     data.declaredFreight
-      ? fieldRow("Frete Declarado", `${fmtNum(Number(data.declaredFreight))} USD`)
+      ? fieldRow("Frete Declarado", `${fmtNum(Number(data.declaredFreight))} ${CUR(data)}`)
       : "",
   ]
     .filter(Boolean)
@@ -223,9 +225,11 @@ export function proposalNotificationHtml(data: ProposalNotificationData): string
     .join("");
 
   const calcRows = [
-    data.freight != null ? fieldRow("Frete (estimado)", `${fmtNum(data.freight)} USD`) : "",
-    data.insurance != null ? fieldRow("Seguro (2%)", `${fmtNum(data.insurance)} USD`) : "",
-    data.cif != null ? fieldRow("Valor CIF", `${fmtNum(data.cif)} USD`) : "",
+    data.freight != null
+      ? fieldRow("Frete (estimado)", `${fmtNum(data.freight)} ${CUR(data)}`)
+      : "",
+    data.insurance != null ? fieldRow("Seguro (2%)", `${fmtNum(data.insurance)} ${CUR(data)}`) : "",
+    data.cif != null ? fieldRow("Valor CIF", `${fmtNum(data.cif)} ${CUR(data)}`) : "",
     data.cifMt != null ? fieldRow("Valor CIF (MZN)", `${fmtNum(data.cifMt)} MZN`) : "",
     data.da != null ? fieldRow("Direitos Aduaneiros (D.A.)", `${fmtNum(data.da)} MZN`) : "",
     data.ice != null && data.ice > 0 ? fieldRow("ICE", `${fmtNum(data.ice)} MZN`) : "",
