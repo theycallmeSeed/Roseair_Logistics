@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 interface PageHeroProps {
   title: string;
   subtitle?: string;
-  image: string;
+  image?: string;
   breadcrumb?: ReactNode;
 }
 
@@ -12,7 +12,9 @@ export function PageHero({ title, subtitle, image, breadcrumb }: PageHeroProps) 
     <section
       className="relative overflow-hidden"
       style={{
-        backgroundImage: `linear-gradient(135deg, oklch(0.27 0.09 265 / 0.92), oklch(0.27 0.09 265 / 0.78)), url(${image})`,
+        backgroundImage: image
+          ? `linear-gradient(135deg, oklch(0.27 0.09 265 / 0.92), oklch(0.27 0.09 265 / 0.78)), url(${image})`
+          : `linear-gradient(135deg, oklch(0.27 0.09 265 / 0.92), oklch(0.27 0.09 265 / 0.78))`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}

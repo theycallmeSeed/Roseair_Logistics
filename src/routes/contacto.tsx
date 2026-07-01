@@ -185,8 +185,11 @@ function ContactPage() {
                   htmlFor="consent"
                   className="text-sm leading-snug font-normal cursor-pointer"
                 >
-                  Aceito a política de privacidade e o tratamento dos meus dados pela Roseair
-                  Logistics.
+                  Aceito a{" "}
+                  <Link to="/privacidade" className="text-primary underline hover:no-underline">
+                    política de privacidade
+                  </Link>{" "}
+                  e o tratamento dos meus dados pela Roseair Logistics.
                 </Label>
               </div>
               {errors.consent && (

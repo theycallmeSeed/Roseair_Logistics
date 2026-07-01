@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { Linkedin, Mail, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
@@ -132,39 +132,22 @@ function TeamPage() {
       <section className="bg-background">
         <div className="mx-auto max-w-7xl container-px py-16">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {team.map((m) => {
-              const initials = m.name
-                .split(" ")
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join("");
-              return (
-                <Card
-                  key={m.name}
-                  className="group bg-white shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all"
-                >
-                  <CardContent className="p-6 text-center">
-                    <div className="mx-auto h-24 w-24 rounded-full bg-gradient-cta flex items-center justify-center text-white text-2xl font-extrabold ring-4 ring-primary/10">
-                      {initials}
-                    </div>
-                    <h3 className="mt-4 font-bold text-secondary text-lg">{m.name}</h3>
+            {team.map((m) => (
+              <Card
+                key={m.name}
+                className="bg-white shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all"
+              >
+                <CardContent className="p-6">
+                  <div className="border-l-4 border-primary pl-4">
+                    <h3 className="font-bold text-secondary text-lg">{m.name}</h3>
                     <p className="text-xs font-semibold text-primary uppercase tracking-wider mt-1">
                       {m.role}
                     </p>
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{m.bio}</p>
-                    <div className="mt-4 flex justify-center gap-2">
-                      <a
-                        href={`mailto:${m.name.toLowerCase().replace(/\s/g, ".")}@roseair.co.mz`}
-                        aria-label={`Email de ${m.name}`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted text-secondary hover:bg-primary hover:text-white transition-colors"
-                      >
-                        <Mail className="h-4 w-4" />
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  </div>
+                  <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{m.bio}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>

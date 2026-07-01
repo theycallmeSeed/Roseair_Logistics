@@ -9,14 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SimuladorRouteImport } from './routes/simulador'
 import { Route as ServicosRouteImport } from './routes/servicos'
 import { Route as ProjectosRouteImport } from './routes/projectos'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as EquipaRouteImport } from './routes/equipa'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SobreRoute = SobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
@@ -35,6 +42,11 @@ const ServicosRoute = ServicosRouteImport.update({
 const ProjectosRoute = ProjectosRouteImport.update({
   id: '/projectos',
   path: '/projectos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EquipaRoute = EquipaRouteImport.update({
@@ -57,29 +69,35 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/equipa': typeof EquipaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/projectos': typeof ProjectosRoute
   '/servicos': typeof ServicosRoute
   '/simulador': typeof SimuladorRoute
   '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/equipa': typeof EquipaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/projectos': typeof ProjectosRoute
   '/servicos': typeof ServicosRoute
   '/simulador': typeof SimuladorRoute
   '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/contacto': typeof ContactoRoute
   '/equipa': typeof EquipaRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/projectos': typeof ProjectosRoute
   '/servicos': typeof ServicosRoute
   '/simulador': typeof SimuladorRoute
   '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,42 +105,57 @@ export interface FileRouteTypes {
     | '/'
     | '/contacto'
     | '/equipa'
+    | '/privacidade'
     | '/projectos'
     | '/servicos'
     | '/simulador'
     | '/sobre'
+    | '/termos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/contacto'
     | '/equipa'
+    | '/privacidade'
     | '/projectos'
     | '/servicos'
     | '/simulador'
     | '/sobre'
+    | '/termos'
   id:
     | '__root__'
     | '/'
     | '/contacto'
     | '/equipa'
+    | '/privacidade'
     | '/projectos'
     | '/servicos'
     | '/simulador'
     | '/sobre'
+    | '/termos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContactoRoute: typeof ContactoRoute
   EquipaRoute: typeof EquipaRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   ProjectosRoute: typeof ProjectosRoute
   ServicosRoute: typeof ServicosRoute
   SimuladorRoute: typeof SimuladorRoute
   SobreRoute: typeof SobreRoute
+  TermosRoute: typeof TermosRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sobre': {
       id: '/sobre'
       path: '/sobre'
@@ -149,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/projectos'
       fullPath: '/projectos'
       preLoaderRoute: typeof ProjectosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/equipa': {
@@ -179,10 +219,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContactoRoute: ContactoRoute,
   EquipaRoute: EquipaRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   ProjectosRoute: ProjectosRoute,
   ServicosRoute: ServicosRoute,
   SimuladorRoute: SimuladorRoute,
   SobreRoute: SobreRoute,
+  TermosRoute: TermosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
