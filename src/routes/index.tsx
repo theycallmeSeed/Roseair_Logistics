@@ -3,8 +3,6 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   ChevronDown,
-  Ship,
-  Plane,
   Truck,
   Boxes,
   FileCheck2,

@@ -45,7 +45,7 @@ export const submitContactForm = createServerFn({ method: "POST" })
     }
 
     try {
-      await sendContactEmail(data);
+      await sendContactEmail(data, { ip });
       return {
         success: true,
         message: "Mensagem enviada! A nossa equipa responderá em breve.",
