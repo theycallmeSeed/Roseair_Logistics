@@ -79,8 +79,12 @@ export function Footer() {
             © {new Date().getFullYear()} {SITE.name}. Todos os direitos reservados.
           </p>
           <div className="flex gap-5">
-            <Link to="/privacidade" className="text-white/60 hover:text-white transition-colors">Política de Privacidade</Link>
-            <Link to="/termos" className="text-white/60 hover:text-white transition-colors">Termos de Uso</Link>
+            <Link to="/privacidade" className="text-white/60 hover:text-white transition-colors">
+              Política de Privacidade
+            </Link>
+            <Link to="/termos" className="text-white/60 hover:text-white transition-colors">
+              Termos de Uso
+            </Link>
           </div>
         </div>
       </div>

@@ -8,7 +8,11 @@ interface LogoProps {
 export function Logo({ variant = "default", className = "" }: LogoProps) {
   const isLight = variant === "light";
   return (
-    <Link to="/" className={`flex items-center gap-2 ${className}`} aria-label="Roseair Logistics — Início">
+    <Link
+      to="/"
+      className={`flex items-center gap-2 ${className}`}
+      aria-label="Roseair Logistics — Início"
+    >
       <span
         className={`flex h-9 w-9 items-center justify-center rounded-md ${
           isLight ? "bg-white/10" : "bg-primary/10"
@@ -25,10 +29,14 @@ export function Logo({ variant = "default", className = "" }: LogoProps) {
         </svg>
       </span>
       <span className="flex flex-col leading-none">
-        <span className={`font-extrabold tracking-tight text-lg ${isLight ? "text-white" : "text-primary"}`}>
+        <span
+          className={`font-extrabold tracking-tight text-lg ${isLight ? "text-white" : "text-primary"}`}
+        >
           ROSEAIR
         </span>
-        <span className={`text-[10px] font-bold tracking-[0.2em] ${isLight ? "text-white/80" : "text-secondary"}`}>
+        <span
+          className={`text-[10px] font-bold tracking-[0.2em] ${isLight ? "text-white/80" : "text-secondary"}`}
+        >
           LOGISTICS, SA
         </span>
       </span>

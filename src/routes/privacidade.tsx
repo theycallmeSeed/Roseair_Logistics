@@ -44,19 +44,19 @@ function PrivacidadePage() {
 
       <section className="bg-background">
         <div className="mx-auto max-w-4xl container-px py-16">
-          <div className="space-y-8 text-muted-foreground leading-relaxed">
+          <div className="space-y-8 text-muted-foreground leading-relaxed max-w-prose mx-auto">
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary mb-4">
+              <h2 className="text-2xl font-extrabold text-secondary mb-4 tracking-tight">
                 Responsável pelo Tratamento
               </h2>
               <p>
-                A {SITE.name}, com sede na {SITE.address}, é a responsável pelo tratamento
-                dos dados pessoais recolhidos através deste website.
+                A {SITE.name}, com sede na {SITE.address}, é a responsável pelo tratamento dos dados
+                pessoais recolhidos através deste website.
               </p>
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary mb-4">
+              <h2 className="text-2xl font-extrabold text-secondary mb-4 tracking-tight">
                 Dados Recolhidos
               </h2>
               <p>Podemos recolher as seguintes categorias de dados pessoais:</p>
@@ -71,7 +71,7 @@ function PrivacidadePage() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary mb-4">
+              <h2 className="text-2xl font-extrabold text-secondary mb-4 tracking-tight">
                 Finalidades do Tratamento
               </h2>
               <p>Os seus dados são tratados para as seguintes finalidades:</p>
@@ -85,30 +85,30 @@ function PrivacidadePage() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary mb-4">
+              <h2 className="text-2xl font-extrabold text-secondary mb-4 tracking-tight">
                 Base Legal
               </h2>
               <p>
-                O tratamento dos seus dados baseia-se no seu consentimento, na execução de
-                medidas pré-contratuais a seu pedido, e no cumprimento de obrigações legais
-                a que a {SITE.name} se encontra sujeita.
+                O tratamento dos seus dados baseia-se no seu consentimento, na execução de medidas
+                pré-contratuais a seu pedido, e no cumprimento de obrigações legais a que a{" "}
+                {SITE.name} se encontra sujeita.
               </p>
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary mb-4">
+              <h2 className="text-2xl font-extrabold text-secondary mb-4 tracking-tight">
                 Partilha de Dados
               </h2>
               <p>
-                Os seus dados não serão partilhados com terceiros, exceto quando necessário
-                para o cumprimento de obrigações legais, ou com prestadores de serviços que
-                atuam como subcontratantes ao abrigo de contrato (por exemplo, serviços de
-                email e alojamento web).
+                Os seus dados não serão partilhados com terceiros, exceto quando necessário para o
+                cumprimento de obrigações legais, ou com prestadores de serviços que atuam como
+                subcontratantes ao abrigo de contrato (por exemplo, serviços de email e alojamento
+                web).
               </p>
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary mb-4">
+              <h2 className="text-2xl font-extrabold text-secondary mb-4 tracking-tight">
                 Prazo de Conservação
               </h2>
               <p>
@@ -118,7 +118,7 @@ function PrivacidadePage() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary mb-4">
+              <h2 className="text-2xl font-extrabold text-secondary mb-4 tracking-tight">
                 Os Seus Direitos
               </h2>
               <p>Nos termos da lei aplicável, pode exercer os seguintes direitos:</p>
@@ -140,10 +140,12 @@ function PrivacidadePage() {
             </div>
 
             <div>
-              <h2 className="text-2xl font-extrabold text-secondary mb-4">Alterações</h2>
+              <h2 className="text-2xl font-extrabold text-secondary mb-4 tracking-tight">
+                Alterações
+              </h2>
               <p>
-                A presente política de privacidade pode ser atualizada periodicamente.
-                Recomendamos a sua consulta regular.
+                A presente política de privacidade pode ser atualizada periodicamente. Recomendamos
+                a sua consulta regular.
               </p>
             </div>
 

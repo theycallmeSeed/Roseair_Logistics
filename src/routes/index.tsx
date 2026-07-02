@@ -1,15 +1,31 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
-  ArrowRight, ChevronDown, Ship, Plane, Truck, Boxes, FileCheck2, Shield,
-  Clock, Globe2, HeadphonesIcon, BadgeDollarSign, Calculator, Quote, Star,
+  ArrowRight,
+  ChevronDown,
+  Ship,
+  Plane,
+  Truck,
+  Boxes,
+  FileCheck2,
+  Shield,
+  Clock,
+  Globe2,
+  HeadphonesIcon,
+  BadgeDollarSign,
+  Calculator,
+  Quote,
 } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { Counter } from "@/components/Counter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
 } from "@/components/ui/carousel";
 import { CLIENTS, SITE } from "@/lib/site";
 import heroPort from "@/assets/hero-port.jpg";
@@ -24,7 +40,10 @@ export const Route = createFileRoute("/")({
         content:
           "Soluções completas de transporte, importação, exportação e desembaraço aduaneiro em Moçambique. Mais de 12 anos a ligar Moçambique ao mundo.",
       },
-      { property: "og:title", content: "Roseair Logistics — Logística que Liga Moçambique ao Mundo" },
+      {
+        property: "og:title",
+        content: "Roseair Logistics — Logística que Liga Moçambique ao Mundo",
+      },
       {
         property: "og:description",
         content:
@@ -63,6 +82,7 @@ const services = [
     icon: FileCheck2,
     title: "Desembaraço Aduaneiro",
     desc: "Processos completos em todos os terminais rodoviários, marítimos, aéreos e postais nacionais.",
+    anchor: "desembaraco-aduaneiro",
   },
   {
     icon: Truck,
@@ -73,6 +93,7 @@ const services = [
     icon: Boxes,
     title: "Importação & Exportação",
     desc: "Gestão integrada de regimes aduaneiros, trânsito e consultoria especializada.",
+    anchor: "importacao-exportacao",
   },
   {
     icon: Shield,
@@ -140,15 +161,21 @@ function HomePage() {
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               {SITE.tagline}
             </span>
-            <h1 className="mt-5 text-4xl md:text-6xl font-extrabold leading-[1.05] tracking-tight">
-              Logística que Liga<br />
+            <h1 className="mt-5 text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">
+              Logística que Liga
+              <br />
               <span className="text-primary">Moçambique</span> ao Mundo
             </h1>
             <p className="mt-6 text-lg md:text-xl text-white/85 max-w-2xl leading-relaxed">
-              Soluções completas de transporte, importação, exportação e desembaraço aduaneiro — com rapidez e confiabilidade.
+              Soluções completas de transporte, importação, exportação e desembaraço aduaneiro — com
+              rapidez e confiabilidade.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-full px-7 h-12 font-semibold shadow-card-hover">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full px-7 h-12 font-semibold shadow-card-hover"
+              >
                 <Link to="/simulador">
                   Pedir Cotação <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -196,21 +223,18 @@ function HomePage() {
       <section className="bg-background">
         <div className="mx-auto max-w-7xl container-px py-20">
           <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-secondary tracking-tight">Os Nossos Serviços</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-secondary tracking-tight">
+              Os Nossos Serviços
+            </h2>
             <div className="mx-auto mt-4 h-1 w-16 bg-primary rounded-full" />
             <p className="mt-4 text-muted-foreground">
-              Cobertura completa do fluxo logístico — do fornecedor ao cliente final, com a política door-to-door.
+              Cobertura completa do fluxo logístico — do fornecedor ao cliente final, com a política
+              door-to-door.
             </p>
           </div>
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {services.map((s, i) => (
-              <motion.div
-                key={s.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-              >
+            {services.map((s) => (
+              <div key={s.title}>
                 <Card className="group h-full border border-border shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
                   <span className="absolute inset-x-0 top-0 h-1 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
                   <CardContent className="p-6">
@@ -221,13 +245,14 @@ function HomePage() {
                     <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
                     <Link
                       to="/servicos"
+                      hash={s.anchor ? `#${s.anchor}` : undefined}
                       className="mt-4 inline-flex items-center text-sm font-semibold text-primary hover:gap-2 transition-all gap-1"
                     >
                       Saber mais <ArrowRight className="h-4 w-4" />
                     </Link>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -247,20 +272,28 @@ function HomePage() {
             />
             <div className="hidden md:block absolute -bottom-6 -right-6 bg-primary text-primary-foreground rounded-xl p-5 shadow-card-hover max-w-[220px]">
               <div className="text-3xl font-extrabold">600+</div>
-              <div className="text-xs opacity-90 mt-1">Contentores geridos para o projecto Brisa e Sol</div>
+              <div className="text-xs opacity-90 mt-1">
+                Contentores geridos para o projecto Brisa e Sol
+              </div>
             </div>
           </div>
           <div>
-            <span className="text-sm font-semibold uppercase tracking-wider text-primary">Porquê escolher-nos</span>
+            <span className="text-sm font-semibold uppercase tracking-wider text-primary">
+              Porquê escolher-nos
+            </span>
             <h2 className="mt-2 text-3xl md:text-4xl font-extrabold text-secondary tracking-tight">
               Comprometidos com a excelência em cada operação
             </h2>
             <p className="mt-4 text-muted-foreground">
-              Equipa dedicada de profissionais que trabalham incansavelmente para que cada operação seja executada com a máxima eficiência e cuidado.
+              Equipa dedicada de profissionais que trabalham incansavelmente para que cada operação
+              seja executada com a máxima eficiência e cuidado.
             </p>
             <ul className="mt-6 grid sm:grid-cols-2 gap-3">
               {differentials.map((d) => (
-                <li key={d.label} className="flex items-center gap-3 rounded-lg bg-white p-3 shadow-card">
+                <li
+                  key={d.label}
+                  className="flex items-center gap-3 rounded-lg bg-white p-3 shadow-card"
+                >
                   <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
                     <d.Icon className="h-4 w-4" />
                   </span>
@@ -269,7 +302,9 @@ function HomePage() {
               ))}
             </ul>
             <Button asChild size="lg" className="mt-7 rounded-full px-6">
-              <Link to="/servicos">Ver Todos os Serviços <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link to="/servicos">
+                Ver Todos os Serviços <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -283,11 +318,17 @@ function HomePage() {
               <Calculator className="h-8 w-8" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-secondary">Simule o Custo do Seu Transporte</h2>
-              <p className="mt-2 text-muted-foreground">Obtenha uma estimativa em segundos — sem compromisso.</p>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-secondary">
+                Simule o Custo do Seu Transporte
+              </h2>
+              <p className="mt-2 text-muted-foreground">
+                Obtenha uma estimativa em segundos — sem compromisso.
+              </p>
             </div>
             <Button asChild size="lg" className="rounded-full px-7 h-12">
-              <Link to="/simulador">Ir para o Simulador <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link to="/simulador">
+                Ir para o Simulador <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -297,7 +338,9 @@ function HomePage() {
       <section className="bg-[var(--color-surface)]">
         <div className="mx-auto max-w-7xl container-px py-20">
           <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-secondary tracking-tight">Clientes que Confiam na Nossa Marca</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-secondary tracking-tight">
+              Clientes que Confiam na Nossa Marca
+            </h2>
             <div className="mx-auto mt-4 h-1 w-16 bg-primary rounded-full" />
           </div>
           <Carousel opts={{ loop: true, align: "start" }} className="mt-10">
@@ -307,20 +350,21 @@ function HomePage() {
                   <Card className="h-full bg-white shadow-card">
                     <CardContent className="p-6 flex flex-col h-full">
                       <Quote className="h-8 w-8 text-primary/30" />
-                      <p className="mt-3 text-sm text-foreground/80 leading-relaxed flex-1">"{t.quote}"</p>
+                      <p className="mt-3 text-sm text-foreground/80 leading-relaxed flex-1">
+                        "{t.quote}"
+                      </p>
                       <div className="mt-5 flex items-center gap-3">
                         <div className="h-11 w-11 rounded-full bg-secondary text-white flex items-center justify-center font-bold">
-                          {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                          {t.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join("")}
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-secondary">{t.name}</div>
                           <div className="text-xs text-muted-foreground">{t.role}</div>
                         </div>
-                      </div>
-                      <div className="mt-3 flex gap-0.5 text-yellow-400">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-current" />
-                        ))}
                       </div>
                     </CardContent>
                   </Card>
@@ -357,15 +401,28 @@ function HomePage() {
       {/* FINAL CTA */}
       <section className="bg-gradient-cta text-white">
         <div className="mx-auto max-w-5xl container-px py-20 text-center">
-          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">Pronto para Enviar a Sua Carga?</h2>
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+            Pronto para Enviar a Sua Carga?
+          </h2>
           <p className="mt-4 text-lg text-white/85 max-w-2xl mx-auto">
             Fale connosco hoje e receba uma proposta personalizada para a sua operação.
           </p>
           <div className="mt-8 flex flex-wrap gap-3 justify-center">
-            <Button asChild size="lg" className="rounded-full px-7 h-12 bg-white text-primary hover:bg-white/90 font-semibold">
-              <Link to="/simulador">Pedir Cotação Agora <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full px-7 h-12 bg-white text-primary hover:bg-white/90 font-semibold"
+            >
+              <Link to="/simulador">
+                Pedir Cotação Agora <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full px-7 h-12 bg-transparent border-white/60 text-white hover:bg-white/10">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-full px-7 h-12 bg-transparent border-white/60 text-white hover:bg-white/10"
+            >
               <Link to="/contacto">Falar com a Equipa</Link>
             </Button>
           </div>

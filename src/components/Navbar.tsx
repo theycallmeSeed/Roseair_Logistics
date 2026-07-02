@@ -43,7 +43,7 @@ export function Navbar({ transparentOnTop = false }: NavbarProps) {
               key={link.to}
               to={link.to}
               activeOptions={{ exact: link.to === "/" }}
-              className={`text-sm font-medium transition-colors ${
+              className={`text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md ${
                 solid ? "text-secondary hover:text-primary" : "text-white hover:text-white/80"
               }`}
               activeProps={{ className: "text-primary font-semibold" }}
@@ -82,7 +82,7 @@ export function Navbar({ transparentOnTop = false }: NavbarProps) {
               key={link.to}
               to={link.to}
               activeOptions={{ exact: link.to === "/" }}
-              className="rounded-md px-3 py-3 text-base font-medium text-secondary hover:bg-muted"
+              className="rounded-md px-3 py-3 text-base font-medium text-secondary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               activeProps={{ className: "text-primary bg-muted" }}
             >
               {link.label}

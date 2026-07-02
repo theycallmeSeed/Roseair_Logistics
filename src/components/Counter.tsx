@@ -28,7 +28,7 @@ export function Counter({ to, prefix = "", suffix = "", duration = 1800 }: Count
           requestAnimationFrame(tick);
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0.4 },
     );
     obs.observe(ref.current);
     return () => obs.disconnect();

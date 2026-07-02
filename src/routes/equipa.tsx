@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { submitApplication } from "@/server/job-application";
+import { FormSuccess } from "@/components/FormSuccess";
 import aboutTeam from "@/assets/about-team.jpg";
 
 export const Route = createFileRoute("/equipa")({
@@ -92,6 +93,7 @@ function TeamPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "", message: "" });
   const [submittingForm, setSubmittingForm] = useState(false);
+  const [submittedApp, setSubmittedApp] = useState(false);
   const hpRef = useRef<HTMLInputElement>(null);
 
   const submit = async (e: React.FormEvent) => {
@@ -102,16 +104,10 @@ function TeamPage() {
     }
     setSubmittingForm(true);
     try {
-      const response = await submitApplication({
-        data: { ...form, _hp_: hpRef.current?.value ?? "" },
-      });
-      if (response.success) {
-        toast.success("Candidatura enviada! Entraremos em contacto.");
-        setOpen(false);
-        setForm({ name: "", email: "", role: "", message: "" });
-      } else {
-        toast.error(response.message ?? "Erro ao enviar. Tente novamente.");
-      }
+      await submitApplication({ data: { ...form, _hp_: hpRef.current?.value ?? "" } });
+      toast.success("Candidatura enviada!");
+      setSubmittedApp(true);
+      setForm({ name: "", email: "", role: "", message: "" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
     } finally {
@@ -178,61 +174,91 @@ function TeamPage() {
         </div>
       </section>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) {
+            setOpen(false);
+            setSubmittedApp(false);
+          }
+        }}
+      >
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Candidatura espontânea</DialogTitle>
-            <DialogDescription>
-              Envie-nos os seus dados e juntamos ao nosso pool de talentos.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={submit} className="space-y-3">
-            <input
-              ref={hpRef}
-              name="_hp_"
-              type="text"
-              tabIndex={-1}
-              autoComplete="off"
-              style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
-            />
-            <div>
-              <Label>Nome *</Label>
-              <Input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
+          {submittedApp ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Candidatura Enviada</DialogTitle>
+                <DialogDescription>
+                  Recebemos a sua candidatura. Entraremos em contacto caso o seu perfil corresponda
+                  às nossas necessidades.
+                </DialogDescription>
+              </DialogHeader>
+              <FormSuccess
+                message="A sua candidatura foi registada com sucesso."
+                responseTime="Entraremos em contacto em até 5 dias úteis."
+                onClose={() => {
+                  setSubmittedApp(false);
+                  setOpen(false);
+                }}
               />
-            </div>
-            <div>
-              <Label>Email *</Label>
-              <Input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label>Cargo de interesse</Label>
-              <Input
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Mensagem</Label>
-              <Textarea
-                rows={4}
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="w-full" disabled={submittingForm}>
-                {submittingForm ? "A enviar..." : "Enviar Candidatura"}
-              </Button>
-            </DialogFooter>
-          </form>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Candidatura espontânea</DialogTitle>
+                <DialogDescription>
+                  Envie-nos os seus dados e juntamos ao nosso pool de talentos.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={submit} className="space-y-3">
+                <input
+                  ref={hpRef}
+                  name="_hp_"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+                />
+                <div>
+                  <Label>Nome *</Label>
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Email *</Label>
+                  <Input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Cargo de interesse</Label>
+                  <Input
+                    value={form.role}
+                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Mensagem</Label>
+                  <Textarea
+                    rows={4}
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="w-full" disabled={submittingForm}>
+                    {submittingForm ? "A enviar..." : "Enviar Candidatura"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </SiteLayout>

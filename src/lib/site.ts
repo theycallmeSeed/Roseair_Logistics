@@ -44,6 +44,13 @@ export const CLIENTS = [
 ];
 
 export const EXPANSION_COUNTRIES = [
-  "Zimbabwe", "Malawi", "Congo (RDC)", "África do Sul",
-  "Eswatini", "Zâmbia", "Uganda", "Burundi", "Botswana",
+  "Zimbabwe",
+  "Malawi",
+  "Congo (RDC)",
+  "África do Sul",
+  "Eswatini",
+  "Zâmbia",
+  "Uganda",
+  "Burundi",
+  "Botswana",
 ];

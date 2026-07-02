@@ -37,15 +37,15 @@ const E_FOB = FOB;
 const EXCHANGE = 63.2;
 
 // --- Expected manual calculation ---
-const E_FRETE = FOB * 0.1;                          // 1 000
-const E_SEGURO = (FOB + E_FRETE) * 0.02;             // 220
-const E_CIF = FOB + E_FRETE + E_SEGURO;              // 11 220
-const E_CIF_MT = E_CIF * EXCHANGE;                   // 709 104
-const E_DA = E_CIF_MT * 0.075;                       // 53 182.8
-const E_IVA_BASE = E_CIF_MT + E_DA;                  // 762 286.8
-const E_IVA = E_IVA_BASE * 0.16;                     // 121 965.888
-const E_TOTAL_TAXES = E_DA + E_IVA;                 // 175 148.688
-const E_TOTAL = E_CIF_MT + E_TOTAL_TAXES + 2_500;    // 886 752.688
+const E_FRETE = FOB * 0.1; // 1 000
+const E_SEGURO = (FOB + E_FRETE) * 0.02; // 220
+const E_CIF = FOB + E_FRETE + E_SEGURO; // 11 220
+const E_CIF_MT = E_CIF * EXCHANGE; // 709 104
+const E_DA = E_CIF_MT * 0.075; // 53 182.8
+const E_IVA_BASE = E_CIF_MT + E_DA; // 762 286.8
+const E_IVA = E_IVA_BASE * 0.16; // 121 965.888
+const E_TOTAL_TAXES = E_DA + E_IVA; // 175 148.688
+const E_TOTAL = E_CIF_MT + E_TOTAL_TAXES + 2_500; // 886 752.688
 
 describe("Audit: Trabalho Exemplo 1 — Material de construção", () => {
   const result = calculateCustoms({
@@ -85,7 +85,9 @@ describe("Audit: Trabalho Exemplo 1 — Material de construção", () => {
     const diff = Math.abs(result.cifMt - E_CIF_MT);
     const decomp = `${E_CIF} × ${EXCHANGE} = ${E_CIF_MT}`;
     expect(diff).toBeLessThan(1e-9);
-    console.log(`  CIF MT: esperado=${E_CIF_MT} (${decomp}), obtido=${result.cifMt}, diff=${diff}  ✅`);
+    console.log(
+      `  CIF MT: esperado=${E_CIF_MT} (${decomp}), obtido=${result.cifMt}, diff=${diff}  ✅`,
+    );
   });
 
   it("Passo 6: D.A. = CIF MT × 7.5%", () => {
@@ -119,14 +121,18 @@ describe("Audit: Trabalho Exemplo 1 — Material de construção", () => {
     const decomp = `${E_DA} + ${0} + ${E_IVA} + ${0} = ${E_TOTAL_TAXES}`;
     const diff = Math.abs(result.totalTaxes - E_TOTAL_TAXES);
     expect(diff).toBeLessThan(0.01);
-    console.log(`  TotalImpostos: esperado=${E_TOTAL_TAXES} (${decomp}), obtido=${result.totalTaxes}, diff=${diff}  ✅`);
+    console.log(
+      `  TotalImpostos: esperado=${E_TOTAL_TAXES} (${decomp}), obtido=${result.totalTaxes}, diff=${diff}  ✅`,
+    );
   });
 
   it("Passo 12: Total Final = CIF MT + Impostos + Taxa", () => {
     const decomp = `${E_CIF_MT} + ${E_TOTAL_TAXES} + 2500 = ${E_TOTAL}`;
     const diff = Math.abs(result.total - E_TOTAL);
     expect(diff).toBeLessThan(0.01);
-    console.log(`  Total: esperado=${E_TOTAL} (${decomp}), obtido=${result.total}, diff=${diff}  ✅`);
+    console.log(
+      `  Total: esperado=${E_TOTAL} (${decomp}), obtido=${result.total}, diff=${diff}  ✅`,
+    );
   });
 });
 
@@ -231,12 +237,12 @@ describe("Audit: Trabalho Exemplo 3 — Automóveis passageiros gasolina ≤1000
 
   it("Sequência completa com frete declarado na factura", () => {
     expect(result.fob).toBe(8_000);
-    expect(result.freight).toBe(600);                          // USOU 600, NÃO 10%
-    expect(result.insurance).toBe(172);                         // (8000+600)×2%
-    expect(result.cif).toBe(8_772);                             // 8000+600+172
-    expect(result.cifMt).toBe(554_390.4);                       // 8772×63.2
+    expect(result.freight).toBe(600); // USOU 600, NÃO 10%
+    expect(result.insurance).toBe(172); // (8000+600)×2%
+    expect(result.cif).toBe(8_772); // 8000+600+172
+    expect(result.cifMt).toBe(554_390.4); // 8772×63.2
     expect(Math.abs(result.da - 110_878.08)).toBeLessThan(0.01); // 554390.4×20%
-    expect(Math.abs(result.ice - 27_719.52)).toBeLessThan(0.01);  // 554390.4×5%
+    expect(Math.abs(result.ice - 27_719.52)).toBeLessThan(0.01); // 554390.4×5%
     expect(Math.abs(result.iva - 110_878.08)).toBeLessThan(0.01); // (554390.4+110878.08+27719.52)×16%
     expect(result.sobretaxa).toBe(0);
     expect(result.fee).toBe(15_000);
@@ -318,8 +324,8 @@ describe("Audit: Trabalho Exemplo 4 — Máquinas com Sobretaxa simulada 3%", ()
     // O motor faz: cif × sobretaxaRate × exchangeRate
     // Matematicamente: CIF × taxa × câmbio = CIF_MT × taxa
     // Verificar: E4_CIF × 0.03 × 63.2 = E4_CIF_MT × 0.03
-    const expectedCifFormula = E4_CIF * 0.03;           // Sobretaxa em USD = 1 683 USD
-    const expectedConverted = expectedCifFormula * 63.2;  // Convertido p/ MZN = 106 365.6
+    const expectedCifFormula = E4_CIF * 0.03; // Sobretaxa em USD = 1 683 USD
+    const expectedConverted = expectedCifFormula * 63.2; // Convertido p/ MZN = 106 365.6
     expect(expectedConverted).toBe(E4_SOBRETAXA);
     expect(Math.abs(result.sobretaxa - E4_SOBRETAXA)).toBeLessThan(1e-9);
     console.log(`  Sobretaxa:

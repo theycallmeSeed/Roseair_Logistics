@@ -8,14 +8,14 @@ Language: Portuguese (PT). EN toggle scaffolded but not populated.
 
 ## Commands
 
-| Action | Command |
-|--------|---------|
-| Dev server | `npm run dev` |
-| Build (prod) | `npm run build` |
-| Build (dev mode) | `npm run build:dev` |
-| Preview build | `npm run preview` |
-| Lint | `npm run lint` (uses ESLint) |
-| Format | `npm run format` (Prettier) |
+| Action           | Command                      |
+| ---------------- | ---------------------------- |
+| Dev server       | `npm run dev`                |
+| Build (prod)     | `npm run build`              |
+| Build (dev mode) | `npm run build:dev`          |
+| Preview build    | `npm run preview`            |
+| Lint             | `npm run lint` (uses ESLint) |
+| Format           | `npm run format` (Prettier)  |
 
 No test framework exists in this repo — no test script.
 
