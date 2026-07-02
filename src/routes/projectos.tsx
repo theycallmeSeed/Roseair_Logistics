@@ -180,7 +180,7 @@ function ProjectsPage() {
                   role="button"
                   aria-label={`Ver detalhes: ${p.title}`}
                 >
-                  <div className="relative aspect-[16/10] overflow-hidden">
+                  {/* <div className="relative aspect-[16/10] overflow-hidden">
                     <img
                       src={p.image}
                       alt={p.title}
@@ -195,7 +195,7 @@ function ProjectsPage() {
                     <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground border-0">
                       {p.category}
                     </Badge>
-                  </div>
+                  </div> */}
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Building2 className="h-3.5 w-3.5" /> {p.client}

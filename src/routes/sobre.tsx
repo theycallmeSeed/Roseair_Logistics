@@ -5,7 +5,7 @@ import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EXPANSION_COUNTRIES } from "@/lib/site";
-import aboutTeam from "@/assets/about-team.jpg";
+import aboutTeam from "@/assets/about-team.webp";
 
 export const Route = createFileRoute("/sobre")({
   head: () => ({

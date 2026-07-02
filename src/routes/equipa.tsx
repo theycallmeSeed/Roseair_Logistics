@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import { submitApplication } from "@/server/job-application";
 import { FormSuccess } from "@/components/FormSuccess";
-import aboutTeam from "@/assets/about-team.jpg";
+import aboutTeam from "@/assets/about-team.webp";
 
 export const Route = createFileRoute("/equipa")({
   head: () => ({
@@ -104,7 +104,9 @@ function TeamPage() {
     }
     setSubmittingForm(true);
     try {
-      const response = await submitApplication({ data: { ...form, _hp_: hpRef.current?.value ?? "" } });
+      const response = await submitApplication({
+        data: { ...form, _hp_: hpRef.current?.value ?? "" },
+      });
       if (response.success) {
         toast.success(response.message);
         setSubmittedApp(true);

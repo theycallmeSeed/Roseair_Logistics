@@ -193,11 +193,11 @@ function ServicesPage() {
                       </li>
                     ))}
                   </ul>
-                  <Button asChild variant="outline" className="mt-6 rounded-full">
+                  {/* <Button asChild variant="outline" className="mt-6 rounded-full">
                     <Link to="/simulador" search={{ service: s.title }}>
                       Pedir Cotação para este Serviço <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
-                  </Button>
+                  </Button> */}
                 </CardContent>
               </Card>
             ))}
