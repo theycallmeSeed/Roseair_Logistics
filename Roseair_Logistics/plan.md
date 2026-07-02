@@ -37,6 +37,7 @@ A professional, conversion-oriented multi-page website for Roseair Logistics (So
 Each route has its own `head()` metadata (title, description, og:title, og:description, og:image where relevant) for SEO/social sharing.
 
 ### 1 — Home (`/`)
+
 - **Hero** with port/cargo background + navy 70% overlay. H1 "Logística que Liga Moçambique ao Mundo", subtitle, two CTAs (Pedir Cotação / Conhecer Serviços), animated scroll indicator.
 - **Stats bar** (navy): 500+ Clientes · 12 Anos · 30+ Países · 98% Pontualidade — animated counters on viewport enter.
 - **Featured Services** — 4 cards (Desembaraço Aduaneiro · Transporte · Importação & Exportação · Soluções Personalizadas) using shadcn Card.
@@ -47,6 +48,7 @@ Each route has its own `head()` metadata (title, description, og:title, og:descr
 - **Final CTA** — diagonal navy→red gradient, "Pronto para Enviar a Sua Carga?" + button.
 
 ### 2 — Services (`/servicos`)
+
 - Inner hero + breadcrumb.
 - Intro text adapted from the CEO message and "Who Are We?".
 - **6 detailed service cards** based on the PDF:
@@ -61,6 +63,7 @@ Each route has its own `head()` metadata (title, description, og:title, og:descr
 - Quick contact form CTA at bottom.
 
 ### 3 — Quote Simulator (`/simulador`)
+
 - Page title, subtitle, prominent **legal disclaimer** in soft yellow box.
 - **3-step wizard with progress bar and slide transitions:**
   - Step 1 — Tipo de Serviço: clickable cards (Marítimo · Aéreo · Terrestre · Multimodal)
@@ -71,6 +74,7 @@ Each route has its own `head()` metadata (title, description, og:title, og:descr
 - React Hook Form + Zod validation, inline errors, mobile-friendly vertical steps.
 
 ### 4 — About (`/sobre`)
+
 - Hero with team/office photo + overlay.
 - **Full CEO message** from the PDF (Message from the CEO of Roseair Logistics) in two columns.
 - "Who Are We?" section.
@@ -81,6 +85,7 @@ Each route has its own `head()` metadata (title, description, og:title, og:descr
 - CTA to Contact.
 
 ### 5 — Projects (`/projectos`)
+
 - Grid of 6 case-study cards with category badges and filters (Marítimo · Aéreo · Terrestre · Desembaraço).
 - Featured case: **Brisa e Sol — A Giant Project, A Solid Partnership** (2+ years, 600+ containers handled, Av. Marginal Costa do Sol Maputo) — full text from PDF.
 - Other cards seeded with the real clients listed in the PDF (Mozambique Heavysand, Africa Great Wall, Haiyu Mining, Macsteel Mozambique, China Henan, Watt Trade, Sunlight, Praia Shopping).
@@ -88,11 +93,13 @@ Each route has its own `head()` metadata (title, description, og:title, og:descr
 - Final CTA: "Torne-se o Nosso Próximo Caso de Sucesso".
 
 ### 6 — Team (`/equipa`)
+
 - Grid of member cards built from the 9 roles in the PDF (Logistics Operations Manager, Logistics Analyst, Customs Broker, Transportation Coordinator, Import/Export Specialist, Compliance Analyst, Logistics Assistant, Demand Planning Analyst, Logistics IT Specialist) with realistic Mozambican names, role, short bio derived from PDF duties, LinkedIn/email icons.
 - Hover elevation + bio reveal.
 - "Junte-se a Nós" section → modal with spontaneous application form.
 
 ### 7 — Contact (`/contacto`)
+
 - Two columns:
   - Left: full validated form (Nome, Email, Telefone/WhatsApp, Empresa, Tipo de serviço, Mensagem, privacy checkbox, red full-width submit, success/error toast).
   - Right: real contact info from the PDF

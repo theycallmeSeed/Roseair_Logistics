@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { Linkedin, Mail, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { submitApplication } from "@/server/job-application";
-import aboutTeam from "@/assets/about-team.jpg";
+import { FormSuccess } from "@/components/FormSuccess";
+import aboutTeam from "@/assets/about-team.webp";
 
 export const Route = createFileRoute("/equipa")({
   head: () => ({
@@ -92,6 +93,7 @@ function TeamPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "", message: "" });
   const [submittingForm, setSubmittingForm] = useState(false);
+  const [submittedApp, setSubmittedApp] = useState(false);
   const hpRef = useRef<HTMLInputElement>(null);
 
   const submit = async (e: React.FormEvent) => {
@@ -102,10 +104,16 @@ function TeamPage() {
     }
     setSubmittingForm(true);
     try {
-      await submitApplication({ data: { ...form, _hp_: hpRef.current?.value ?? "" } });
-      toast.success("Candidatura enviada! Entraremos em contacto.");
-      setOpen(false);
-      setForm({ name: "", email: "", role: "", message: "" });
+      const response = await submitApplication({
+        data: { ...form, _hp_: hpRef.current?.value ?? "" },
+      });
+      if (response.success) {
+        toast.success(response.message);
+        setSubmittedApp(true);
+        setForm({ name: "", email: "", role: "", message: "" });
+      } else {
+        toast.error(response.message);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
     } finally {
@@ -132,39 +140,22 @@ function TeamPage() {
       <section className="bg-background">
         <div className="mx-auto max-w-7xl container-px py-16">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {team.map((m) => {
-              const initials = m.name
-                .split(" ")
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join("");
-              return (
-                <Card
-                  key={m.name}
-                  className="group bg-white shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all"
-                >
-                  <CardContent className="p-6 text-center">
-                    <div className="mx-auto h-24 w-24 rounded-full bg-gradient-cta flex items-center justify-center text-white text-2xl font-extrabold ring-4 ring-primary/10">
-                      {initials}
-                    </div>
-                    <h3 className="mt-4 font-bold text-secondary text-lg">{m.name}</h3>
+            {team.map((m) => (
+              <Card
+                key={m.name}
+                className="bg-white shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all"
+              >
+                <CardContent className="p-6">
+                  <div className="border-l-4 border-primary pl-4">
+                    <h3 className="font-bold text-secondary text-lg">{m.name}</h3>
                     <p className="text-xs font-semibold text-primary uppercase tracking-wider mt-1">
                       {m.role}
                     </p>
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{m.bio}</p>
-                    <div className="mt-4 flex justify-center gap-2">
-                      <a
-                        href={`mailto:${m.name.toLowerCase().replace(/\s/g, ".")}@roseair.co.mz`}
-                        aria-label={`Email de ${m.name}`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted text-secondary hover:bg-primary hover:text-white transition-colors"
-                      >
-                        <Mail className="h-4 w-4" />
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  </div>
+                  <p className="mt-4 text-sm text-muted-foreground leading-relaxed">{m.bio}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -189,61 +180,91 @@ function TeamPage() {
         </div>
       </section>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) {
+            setOpen(false);
+            setSubmittedApp(false);
+          }
+        }}
+      >
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Candidatura espontânea</DialogTitle>
-            <DialogDescription>
-              Envie-nos os seus dados e juntamos ao nosso pool de talentos.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={submit} className="space-y-3">
-            <input
-              ref={hpRef}
-              name="_hp_"
-              type="text"
-              tabIndex={-1}
-              autoComplete="off"
-              style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
-            />
-            <div>
-              <Label>Nome *</Label>
-              <Input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
+          {submittedApp ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Candidatura Enviada</DialogTitle>
+                <DialogDescription>
+                  Recebemos a sua candidatura. Entraremos em contacto caso o seu perfil corresponda
+                  às nossas necessidades.
+                </DialogDescription>
+              </DialogHeader>
+              <FormSuccess
+                message="A sua candidatura foi registada com sucesso."
+                responseTime="Entraremos em contacto em até 5 dias úteis."
+                onClose={() => {
+                  setSubmittedApp(false);
+                  setOpen(false);
+                }}
               />
-            </div>
-            <div>
-              <Label>Email *</Label>
-              <Input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label>Cargo de interesse</Label>
-              <Input
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Mensagem</Label>
-              <Textarea
-                rows={4}
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="w-full" disabled={submittingForm}>
-                {submittingForm ? "A enviar..." : "Enviar Candidatura"}
-              </Button>
-            </DialogFooter>
-          </form>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Candidatura espontânea</DialogTitle>
+                <DialogDescription>
+                  Envie-nos os seus dados e juntamos ao nosso pool de talentos.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={submit} className="space-y-3">
+                <input
+                  ref={hpRef}
+                  name="_hp_"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
+                />
+                <div>
+                  <Label>Nome *</Label>
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Email *</Label>
+                  <Input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Cargo de interesse</Label>
+                  <Input
+                    value={form.role}
+                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Mensagem</Label>
+                  <Textarea
+                    rows={4}
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="submit" className="w-full" disabled={submittingForm}>
+                    {submittingForm ? "A enviar..." : "Enviar Candidatura"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </SiteLayout>

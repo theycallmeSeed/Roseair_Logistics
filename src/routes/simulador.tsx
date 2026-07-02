@@ -5,7 +5,7 @@ import {
   Layers,
   ArrowLeft,
   ArrowRight,
-  AlertTriangle,
+  Info,
   RefreshCw,
   Mail,
   CheckCircle2,
@@ -38,8 +38,16 @@ import {
 import { toast } from "sonner";
 import { SITE } from "@/lib/site";
 import { submitProposalRequest } from "@/server/request-proposal";
+import { FormSuccess } from "@/components/FormSuccess";
+
+import { z } from "zod";
+
+const simulatorSearchSchema = z.object({
+  service: z.string().optional(),
+});
 
 export const Route = createFileRoute("/simulador")({
+  validateSearch: simulatorSearchSchema.parse,
   head: () => ({
     meta: [
       { title: "Simulador de Desembaraço Aduaneiro — Roseair Logistics" },
@@ -242,6 +250,7 @@ function calcCustoms(
 }
 
 function SimulatorPage() {
+  const { service: preselectedService } = Route.useSearch();
   const [step, setStep] = useState(1);
   const [group, setGroup] = useState<"geral" | "veiculos" | null>(null);
 
@@ -259,7 +268,7 @@ function SimulatorPage() {
   const [proposalForm, setProposalForm] = useState({ name: "", email: "", phone: "", company: "" });
   const [proposalSubmitting, setProposalSubmitting] = useState(false);
   const [proposalSubmitted, setProposalSubmitted] = useState(false);
-  const submittedDataRef = useRef({ name: "", company: "", phone: "" });
+  const submittedDataRef = useRef({ name: "", company: "", phone: "", email: "" });
   const hpRef = useRef<HTMLInputElement>(null);
 
   const result = useMemo(() => {
@@ -304,7 +313,7 @@ function SimulatorPage() {
     const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
     setProposalSubmitting(true);
     try {
-      await submitProposalRequest({
+      const response = await submitProposalRequest({
         data: {
           ...proposalForm,
           _hp_: hpRef.current?.value ?? "",
@@ -316,17 +325,23 @@ function SimulatorPage() {
           declaredFreight,
           cargoCategory: category?.label ?? "",
           clearanceType,
+          preselectedService: preselectedService ?? "",
           ...(result ?? {}),
         },
       });
-      toast.success("Pedido enviado! Entraremos em contacto em breve.");
-      submittedDataRef.current = {
-        name: proposalForm.name,
-        company: proposalForm.company,
-        phone: proposalForm.phone,
-      };
-      setProposalSubmitted(true);
-      setProposalForm({ name: "", email: "", phone: "", company: "" });
+      if (response.success) {
+        toast.success(response.message);
+        submittedDataRef.current = {
+          name: proposalForm.name,
+          company: proposalForm.company,
+          phone: proposalForm.phone,
+          email: proposalForm.email,
+        };
+        setProposalSubmitted(true);
+        setProposalForm({ name: "", email: "", phone: "", company: "" });
+      } else {
+        toast.error(response.message);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
     } finally {
@@ -370,9 +385,9 @@ function SimulatorPage() {
       <section className="bg-background">
         <div className="mx-auto max-w-4xl container-px py-12">
           {/* Disclaimer */}
-          <div className="rounded-lg border-l-4 border-yellow-400 bg-yellow-50 p-4 flex gap-3 text-sm">
-            <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-            <p className="text-yellow-900 leading-relaxed">
+          <div className="rounded-lg border-l-4 border-blue-400 bg-blue-50 p-4 flex gap-3 text-sm">
+            <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+            <p className="text-blue-900 leading-relaxed">
               <strong>Aviso legal:</strong> Os valores apresentados são meramente estimativos. O
               valor final aduaneiro pode variar conforme a legislação em vigor, classificação pautal
               oficial, isenções aplicáveis e validação final da Autoridade Tributária.
@@ -410,7 +425,7 @@ function SimulatorPage() {
                         setGroup(g.id);
                         setCategoryId("");
                       }}
-                      className={`text-left rounded-xl border-2 p-6 transition-all hover:shadow-card-hover ${
+                      className={`text-left rounded-xl border-2 p-6 transition-all hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                         group === g.id
                           ? "border-primary bg-primary/5 shadow-card-hover"
                           : "border-border bg-white"
@@ -571,7 +586,7 @@ function SimulatorPage() {
                         key={o.v}
                         type="button"
                         onClick={() => setClearanceType(o.v as ClearanceType)}
-                        className={`text-left rounded-lg border p-3 cursor-pointer hover:border-primary transition-all ${
+                        className={`text-left rounded-lg border p-3 cursor-pointer hover:border-primary transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                           clearanceType === o.v
                             ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
                             : "border-border"
@@ -710,52 +725,41 @@ function SimulatorPage() {
                   personalizada em breve.
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4 text-center">
-                <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Enquanto aguarda, pode falar connosco directamente no WhatsApp para acelerar o
-                  processo.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Button
-                  size="lg"
-                  className="rounded-full w-full"
-                  onClick={() => {
-                    const sd = submittedDataRef.current;
-                    const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
-                    const lines = [
-                      "Olá! Acabei de solicitar uma proposta personalizada através do simulador da Roseair Logistics.",
-                      "",
-                      `*Nome:* ${sd.name}`,
-                      sd.company ? `*Empresa:* ${sd.company}` : "",
-                      sd.phone ? `*Telefone:* ${sd.phone}` : "",
-                      origin ? `*Origem:* ${origin}` : "",
-                      destination ? `*Destino:* ${destination}` : "",
-                      category?.label ? `*Categoria:* ${category.label}` : "",
-                      currency ? `*Moeda:* ${currency}` : "",
-                      fob > 0 ? `*Valor FOB:* ${fmt(fob, currency ?? "USD")}` : "",
-                      result?.total != null ? `*Total Estimado:* ${fmt(result.total)}` : "",
-                    ]
-                      .filter(Boolean)
-                      .join("%0A");
-                    window.open(`https://wa.me/${SITE.whatsapp}?text=${lines}`, "_blank");
-                  }}
-                >
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  Continuar no WhatsApp
-                </Button>
-                <Button
-                  variant="outline"
-                  className="rounded-full w-full"
-                  onClick={() => {
-                    setProposalSubmitted(false);
-                    setProposalOpen(false);
-                  }}
-                >
-                  Fechar
-                </Button>
-              </div>
+              <FormSuccess
+                message="Recebemos os dados da sua simulação com sucesso."
+                onClose={() => {
+                  setProposalSubmitted(false);
+                  setProposalOpen(false);
+                }}
+              />
+              <Button
+                size="lg"
+                className="rounded-full w-full mt-2"
+                onClick={() => {
+                  const sd = submittedDataRef.current;
+                  const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
+                  const lines = [
+                    "Olá! Acabei de solicitar uma proposta personalizada através do simulador da Roseair Logistics.",
+                    "",
+                    `*Nome:* ${sd.name}`,
+                    sd.company ? `*Empresa:* ${sd.company}` : "",
+                    sd.phone ? `*Telefone:* ${sd.phone}` : "",
+                    sd.email ? `*Email:* ${sd.email}` : "",
+                    origin ? `*Origem:* ${origin}` : "",
+                    destination ? `*Destino:* ${destination}` : "",
+                    category?.label ? `*Categoria:* ${category.label}` : "",
+                    currency ? `*Moeda:* ${currency}` : "",
+                    fob > 0 ? `*Valor FOB:* ${fmt(fob, currency ?? "USD")}` : "",
+                    result?.total != null ? `*Total Estimado:* ${fmt(result.total)}` : "",
+                  ]
+                    .filter(Boolean)
+                    .join("%0A");
+                  window.open(`https://wa.me/${SITE.whatsapp}?text=${lines}`, "_blank");
+                }}
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                Continuar no WhatsApp
+              </Button>
             </>
           ) : (
             <>

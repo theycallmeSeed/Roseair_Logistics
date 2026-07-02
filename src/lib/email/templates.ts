@@ -14,7 +14,7 @@ const BG_LIGHT = "#F5F5F5";
 const COMPANY_NAME = "ROSEAIR LOGISTICS, SA";
 const COMPANY_ADDRESS = "Av. Olof Palme, nº 798, 2º andar / direito, Maputo, Moçambique";
 const COMPANY_PHONES = ["+258 86 352 7562", "+258 87 70 40 453"];
-const COMPANY_EMAIL = "roseair.geral@outlook.com";
+const COMPANY_EMAIL = "comercial@roseair.co.mz";
 
 function headerHtml(): string {
   return `

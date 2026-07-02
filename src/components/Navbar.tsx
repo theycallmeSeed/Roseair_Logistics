@@ -13,7 +13,6 @@ interface NavbarProps {
 export function Navbar({ transparentOnTop = false }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [lang, setLang] = useState<"PT" | "EN">("PT");
   const location = useLocation();
 
   useEffect(() => {
@@ -44,7 +43,7 @@ export function Navbar({ transparentOnTop = false }: NavbarProps) {
               key={link.to}
               to={link.to}
               activeOptions={{ exact: link.to === "/" }}
-              className={`text-sm font-medium transition-colors ${
+              className={`text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md ${
                 solid ? "text-secondary hover:text-primary" : "text-white hover:text-white/80"
               }`}
               activeProps={{ className: "text-primary font-semibold" }}
@@ -55,26 +54,6 @@ export function Navbar({ transparentOnTop = false }: NavbarProps) {
         </nav>
 
         <div className="hidden lg:flex items-center gap-3">
-          <div
-            className={`flex items-center text-xs font-semibold rounded-full border ${
-              solid ? "border-border text-secondary" : "border-white/30 text-white"
-            }`}
-          >
-            <button
-              onClick={() => setLang("PT")}
-              className={`px-2.5 py-1 rounded-full ${lang === "PT" ? "bg-primary text-primary-foreground" : ""}`}
-              aria-pressed={lang === "PT"}
-            >
-              PT
-            </button>
-            <button
-              onClick={() => setLang("EN")}
-              className={`px-2.5 py-1 rounded-full ${lang === "EN" ? "bg-primary text-primary-foreground" : ""}`}
-              aria-pressed={lang === "EN"}
-            >
-              EN
-            </button>
-          </div>
           <Button asChild size="sm" className="rounded-full px-5 font-semibold">
             <Link to="/simulador">Pedir Cotação</Link>
           </Button>
@@ -103,7 +82,7 @@ export function Navbar({ transparentOnTop = false }: NavbarProps) {
               key={link.to}
               to={link.to}
               activeOptions={{ exact: link.to === "/" }}
-              className="rounded-md px-3 py-3 text-base font-medium text-secondary hover:bg-muted"
+              className="rounded-md px-3 py-3 text-base font-medium text-secondary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               activeProps={{ className: "text-primary bg-muted" }}
             >
               {link.label}

@@ -1,13 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  FileCheck2, Ship, Plane, Truck, Globe2, Warehouse, ArrowRight, Check,
-} from "lucide-react";
+import { createFileRoute, Link, useLocation } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { FileCheck2, Ship, Plane, Truck, Globe2, Warehouse, ArrowRight, Check } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from "@/components/ui/accordion";
 import servicesBanner from "@/assets/services-banner.jpg";
 
@@ -23,7 +25,8 @@ export const Route = createFileRoute("/servicos")({
       { property: "og:title", content: "Serviços — Roseair Logistics" },
       {
         property: "og:description",
-        content: "Soluções logísticas completas: aduaneiro, marítimo, aéreo, terrestre, importação/exportação e armazenagem.",
+        content:
+          "Soluções logísticas completas: aduaneiro, marítimo, aéreo, terrestre, importação/exportação e armazenagem.",
       },
       { property: "og:image", content: servicesBanner },
     ],
@@ -33,6 +36,7 @@ export const Route = createFileRoute("/servicos")({
 
 const services = [
   {
+    id: "desembaraco-aduaneiro",
     icon: FileCheck2,
     title: "Desembaraço Aduaneiro",
     desc: "A Roseair Logistics oferece serviços completos de desembaraço aduaneiro, cobrindo todos os terminais rodoviários, marítimos, aéreos e postais a nível nacional.",
@@ -44,6 +48,7 @@ const services = [
     ],
   },
   {
+    id: "transporte-maritimo",
     icon: Ship,
     title: "Transporte Marítimo",
     desc: "Soluções FCL e LCL através dos principais portos de Moçambique — Maputo, Beira (o maior corredor estratégico de trânsito internacional) e Nacala.",
@@ -55,6 +60,7 @@ const services = [
     ],
   },
   {
+    id: "transporte-aereo",
     icon: Plane,
     title: "Transporte Aéreo",
     desc: "Expansão dos serviços de transporte aéreo de carga através de uma nova parceria estratégica, oferecendo soluções rápidas e seguras com eficiência inigualável.",
@@ -66,6 +72,7 @@ const services = [
     ],
   },
   {
+    id: "transporte-terrestre",
     icon: Truck,
     title: "Transporte Terrestre",
     desc: "Parcerias estratégicas com transportadoras de elevada reputação para transporte rodoviário nacional e internacional na região SADC.",
@@ -77,6 +84,7 @@ const services = [
     ],
   },
   {
+    id: "importacao-exportacao",
     icon: Globe2,
     title: "Importação & Exportação",
     desc: "Gestão integrada de processos de importação e exportação, com conhecimento profundo de regimes aduaneiros e consultoria especializada em comércio internacional.",
@@ -88,6 +96,7 @@ const services = [
     ],
   },
   {
+    id: "logistica-integradada",
     icon: Warehouse,
     title: "Logística Integrada & Armazenagem",
     desc: "Política door-to-door cobrindo todo o fluxo desde o fornecedor ao cliente final, com armazéns alfandegados monitorados 24/7 com tecnologia de ponta.",
@@ -120,6 +129,19 @@ const faqs = [
 ];
 
 function ServicesPage() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash) {
+      const id = hash.replace("#", "");
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      }
+    }
+  }, [location.hash]);
+
   return (
     <SiteLayout>
       <PageHero
@@ -128,7 +150,10 @@ function ServicesPage() {
         image={servicesBanner}
         breadcrumb={
           <span>
-            <Link to="/" className="hover:text-white">Início</Link> / Serviços
+            <Link to="/" className="hover:text-white">
+              Início
+            </Link>{" "}
+            / Serviços
           </span>
         }
       />
@@ -137,17 +162,22 @@ function ServicesPage() {
         <div className="mx-auto max-w-7xl container-px py-16">
           <div className="max-w-3xl">
             <h2 className="text-2xl md:text-3xl font-extrabold text-secondary tracking-tight">
-              Quem Somos
+              Serviços
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              A Roseair Logistics é uma empresa que integra trânsito, fretes marítimos, gestão de desembaraço aduaneiro de mercadorias em vários regimes — incluindo importação, exportação e trânsito. Com anos de experiência no sector, somos reconhecidos pela fiabilidade, rapidez e compromisso com a satisfação dos clientes.
+              Soluções completas de logística, transporte e desembaraço aduaneiro — com a garantia
+              de quem conhece o mercado moçambicano e a região SADC.
             </p>
           </div>
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
             {services.map((s) => (
-              <Card key={s.title} className="border border-border shadow-card hover:shadow-card-hover transition-all">
-                <CardContent className="p-7">
+              <Card
+                key={s.title}
+                id={s.id}
+                className="border border-border shadow-card hover:shadow-card-hover transition-all scroll-mt-28"
+              >
+                <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <s.icon className="h-7 w-7" />
@@ -163,9 +193,11 @@ function ServicesPage() {
                       </li>
                     ))}
                   </ul>
-                  <Button asChild variant="outline" className="mt-6 rounded-full">
-                    <Link to="/simulador">Pedir Cotação para este Serviço <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                  </Button>
+                  {/* <Button asChild variant="outline" className="mt-6 rounded-full">
+                    <Link to="/simulador" search={{ service: s.title }}>
+                      Pedir Cotação para este Serviço <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button> */}
                 </CardContent>
               </Card>
             ))}
@@ -177,13 +209,21 @@ function ServicesPage() {
       <section className="bg-[var(--color-surface)]">
         <div className="mx-auto max-w-4xl container-px py-16">
           <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-secondary tracking-tight">Perguntas Frequentes</h2>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-secondary tracking-tight">
+              Perguntas Frequentes
+            </h2>
             <div className="mx-auto mt-4 h-1 w-16 bg-primary rounded-full" />
           </div>
-          <Accordion type="single" collapsible className="mt-8 bg-white rounded-xl shadow-card p-2 md:p-4">
+          <Accordion
+            type="single"
+            collapsible
+            className="mt-8 bg-white rounded-xl shadow-card p-2 md:p-4"
+          >
             {faqs.map((f, i) => (
               <AccordionItem key={i} value={`item-${i}`}>
-                <AccordionTrigger className="text-left font-semibold text-secondary px-4">{f.q}</AccordionTrigger>
+                <AccordionTrigger className="text-left font-semibold text-secondary px-4">
+                  {f.q}
+                </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground px-4">{f.a}</AccordionContent>
               </AccordionItem>
             ))}
@@ -194,13 +234,24 @@ function ServicesPage() {
       {/* CTA */}
       <section className="bg-gradient-cta text-white">
         <div className="mx-auto max-w-5xl container-px py-16 text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Vamos discutir o seu próximo envio</h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+            Vamos discutir o seu próximo envio
+          </h2>
           <p className="mt-3 text-white/85">A nossa equipa responde em menos de 24 horas.</p>
           <div className="mt-7 flex flex-wrap gap-3 justify-center">
-            <Button asChild size="lg" className="rounded-full px-7 h-12 bg-white text-primary hover:bg-white/90">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full px-7 h-12 bg-white text-primary hover:bg-white/90"
+            >
               <Link to="/simulador">Pedir Cotação</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full px-7 h-12 bg-transparent border-white/60 text-white hover:bg-white/10">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="rounded-full px-7 h-12 bg-transparent border-white/60 text-white hover:bg-white/10"
+            >
               <Link to="/contacto">Falar com a Equipa</Link>
             </Button>
           </div>
