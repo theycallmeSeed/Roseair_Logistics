@@ -16,6 +16,7 @@ const schema = z.object({
   cargoCategory: z.string().optional(),
   clearanceType: z.string().optional(),
   declaredFreight: z.string().optional(),
+  preselectedService: z.string().optional(),
   exchangeRate: z.number().optional(),
   fob: z.number().optional(),
   freight: z.number().optional(),
@@ -29,56 +30,50 @@ const schema = z.object({
   fee: z.number().optional(),
   totalTaxes: z.number().optional(),
   total: z.number().optional(),
+  _hp_: z.string().optional(),
 });
 
 export const submitProposalRequest = createServerFn({
   method: "POST",
-}).handler(async ({ data }) => {
-  const raw = data as Record<string, unknown>;
-  if (typeof raw._hp_ === "string" && raw._hp_.length > 0) {
-    return {
-      success: true,
-      message: "Pedido enviado! Entraremos em contacto em breve.",
-    };
-  }
+})
+  .inputValidator(schema)
+  .handler(async ({ data }) => {
+    if (data._hp_) {
+      return {
+        success: true,
+        message: "Pedido enviado! Entraremos em contacto em breve.",
+      };
+    }
 
-  const ip = getRequestIP() ?? "unknown";
-  if (!checkRateLimit(ip).allowed) {
-    return {
-      success: false,
-      message: "Muitas tentativas. Tente novamente mais tarde.",
-    };
-  }
+    const ip = getRequestIP() ?? "unknown";
+    if (!checkRateLimit(ip).allowed) {
+      return {
+        success: false,
+        message: "Muitas tentativas. Tente novamente mais tarde.",
+      };
+    }
 
-  const parsed = schema.safeParse(data);
-  if (!parsed.success) {
-    return {
-      success: false,
-      message: "Dados inválidos. Verifique os campos e tente novamente.",
-    };
-  }
+    const missing = validateEnv();
+    if (missing.length > 0) {
+      console.error(`[submitProposalRequest] Missing env vars: ${missing.join(", ")}`);
+      return {
+        success: false,
+        message:
+          "O pedido de proposta está temporariamente indisponível. Tente novamente mais tarde.",
+      };
+    }
 
-  const missing = validateEnv();
-  if (missing.length > 0) {
-    console.error(`[submitProposalRequest] Missing env vars: ${missing.join(", ")}`);
-    return {
-      success: false,
-      message:
-        "O pedido de proposta está temporariamente indisponível. Tente novamente mais tarde.",
-    };
-  }
-
-  try {
-    await sendProposalEmail(parsed.data);
-    return {
-      success: true,
-      message: "Pedido enviado! Entraremos em contacto em breve.",
-    };
-  } catch (error) {
-    console.error("[submitProposalRequest] Failed to send email", error);
-    return {
-      success: false,
-      message: "Ocorreu um erro ao enviar o seu pedido. Tente novamente mais tarde.",
-    };
-  }
-});
+    try {
+      await sendProposalEmail(data);
+      return {
+        success: true,
+        message: "Pedido enviado! Entraremos em contacto em breve.",
+      };
+    } catch (error) {
+      console.error("[submitProposalRequest] Failed to send email", error);
+      return {
+        success: false,
+        message: "Ocorreu um erro ao enviar o seu pedido. Tente novamente mais tarde.",
+      };
+    }
+  });

@@ -73,10 +73,16 @@ function ContactPage() {
   const onSubmit = async (data: FormValues) => {
     setSubmitting(true);
     try {
-      await submitContactForm({ data: { ...data, _hp_: hpRef.current?.value ?? "" } });
-      toast.success("Mensagem enviada!");
-      setSubmitted(true);
-      reset();
+      const response = await submitContactForm({
+        data: { ...data, _hp_: hpRef.current?.value ?? "" },
+      });
+      if (response.success) {
+        toast.success(response.message);
+        setSubmitted(true);
+        reset();
+      } else {
+        toast.error(response.message);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
     } finally {

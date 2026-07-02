@@ -313,7 +313,7 @@ function SimulatorPage() {
     const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
     setProposalSubmitting(true);
     try {
-      await submitProposalRequest({
+      const response = await submitProposalRequest({
         data: {
           ...proposalForm,
           _hp_: hpRef.current?.value ?? "",
@@ -329,15 +329,19 @@ function SimulatorPage() {
           ...(result ?? {}),
         },
       });
-      toast.success("Pedido enviado!");
-      submittedDataRef.current = {
-        name: proposalForm.name,
-        company: proposalForm.company,
-        phone: proposalForm.phone,
-        email: proposalForm.email,
-      };
-      setProposalSubmitted(true);
-      setProposalForm({ name: "", email: "", phone: "", company: "" });
+      if (response.success) {
+        toast.success(response.message);
+        submittedDataRef.current = {
+          name: proposalForm.name,
+          company: proposalForm.company,
+          phone: proposalForm.phone,
+          email: proposalForm.email,
+        };
+        setProposalSubmitted(true);
+        setProposalForm({ name: "", email: "", phone: "", company: "" });
+      } else {
+        toast.error(response.message);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
     } finally {
