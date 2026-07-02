@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, Linkedin, Facebook, Instagram } from "lucide-react";
 import { Logo } from "./Logo";
 import { SITE, NAV_LINKS } from "@/lib/site";
 
@@ -10,12 +10,30 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-4">
           <div>
             <div className="rounded-md bg-white/5 p-3 inline-block">
-              <Logo variant="light" />
+              <Logo transparent className="h-14" />
             </div>
             <p className="mt-4 text-sm text-white/70 leading-relaxed">
               {SITE.tagline}. Soluções integradas de logística, transporte e desembaraço aduaneiro
               em Moçambique e na região SADC.
             </p>
+            <div className="mt-5 flex gap-3">
+              {[
+                { Icon: Linkedin, href: SITE.social.linkedin, label: "LinkedIn" },
+                { Icon: Facebook, href: SITE.social.facebook, label: "Facebook" },
+                { Icon: Instagram, href: SITE.social.instagram, label: "Instagram" },
+              ].map(({ Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-primary transition-colors"
+                >
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -79,12 +97,12 @@ export function Footer() {
             © {new Date().getFullYear()} {SITE.name}. Todos os direitos reservados.
           </p>
           <div className="flex gap-5">
-            <Link to="/privacidade" className="text-white/60 hover:text-white transition-colors">
+            <a href="#" className="hover:text-white">
               Política de Privacidade
-            </Link>
-            <Link to="/termos" className="text-white/60 hover:text-white transition-colors">
+            </a>
+            <a href="#" className="hover:text-white">
               Termos de Uso
-            </Link>
+            </a>
           </div>
         </div>
       </div>

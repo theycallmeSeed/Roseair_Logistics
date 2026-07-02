@@ -1,20 +1,21 @@
-import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo.webp";
+import logoTransparent from "@/assets/logo-transparente.webp";
+import { Link } from "@tanstack/react-router";
 
 interface LogoProps {
-  variant?: "default" | "light";
+  transparent?: boolean;
   className?: string;
 }
 
-export function Logo({ className = "" }: LogoProps) {
+export function Logo({ transparent = false, className = "" }: LogoProps) {
   return (
     <Link
       to="/"
-      className={`inline-flex items-center ${className}`}
       aria-label="Roseair Logistics — Início"
+      className={`inline-flex items-center ${className}`}
     >
       <img
-        src={logo}
+        src={transparent ? logoTransparent : logo}
         alt="Roseair Logistics"
         className="h-12 w-auto object-contain"
         loading="eager"

@@ -35,7 +35,7 @@ export function Navbar({ transparentOnTop = false }: NavbarProps) {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between container-px py-3">
-        <Logo variant={solid ? "default" : "light"} />
+        <Logo transparent={!solid} />
 
         <nav className="hidden lg:flex items-center gap-7">
           {NAV_LINKS.map((link) => (
