@@ -1,0 +1,31 @@
+export default {
+  apps: [
+    {
+      name: "roseair",
+      script: "./server.js",
+      cwd: ".",
+      env: {
+        NODE_ENV: "production",
+        HOST: "127.0.0.1",
+        PORT: "3000",
+      },
+      env_file: ".env.production",
+      instances: 1,
+      exec_mode: "fork",
+      autorestart: true,
+      max_restarts: 10,
+      restart_delay: 5000,
+      max_memory_restart: "512M",
+      min_uptime: "30s",
+      listen_timeout: 10000,
+      kill_timeout: 10000,
+      shutdown_with_message: true,
+      watch: false,
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      error_file: "./logs/roseair-error.log",
+      out_file: "./logs/roseair-out.log",
+      merge_logs: true,
+      pid_file: "./pids/roseair.pid",
+    },
+  ],
+};
