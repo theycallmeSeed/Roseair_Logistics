@@ -129,15 +129,38 @@ sudo certbot renew --dry-run
 ## PM2 Management
 
 ```bash
+# Status
 pm2 status
 pm2 show roseair
+pm2 logs roseair
 pm2 logs roseair --lines 100
-pm2 reload roseair       # graceful restart
+
+# Restart (graceful — zero-downtime)
+pm2 reload roseair
+
+# Stop / Start
 pm2 stop roseair
 pm2 start roseair
+
+# Save process list
 pm2 save
+
+# View metrics
 pm2 monit
 ```
+
+### PM2 Configuration (`ecosystem.config.js`)
+
+| Setting               | Value    | Notes                         |
+| --------------------- | -------- | ----------------------------- |
+| instances             | 1        | Single process (in-memory)    |
+| exec_mode             | fork     | Not cluster (in-memory state) |
+| max_memory_restart    | 512M     | Restart if exceeds 512 MB     |
+| max_restarts          | 10       | Max crash attempts            |
+| restart_delay         | 5000 ms  | Wait between restarts         |
+| kill_timeout          | 10000 ms | SIGTERM → SIGKILL grace       |
+| listen_timeout        | 10000 ms | Wait for listen after restart |
+| shutdown_with_message | true     | Send shutdown message         |
 
 ## Logs
 
