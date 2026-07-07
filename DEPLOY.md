@@ -2,10 +2,12 @@
 
 Target: Ubuntu 24.04, Node 20, PM2, Nginx, Certbot
 
+Repository: `https://github.com/theycallmeSeed/Roseair_Logistics`
+
 ## Prerequisites
 
 - Ubuntu 24.04 server with SSH access and sudo
-- Domain `roseairlogistics.com` (or your domain) pointing to the server IP
+- Domain pointing to the server IP (default: `roseairlogistics.com`)
 - Resend API key (`https://resend.com/api-keys`)
 - Resend-verified sender domain for `FROM_EMAIL`
 - GitHub SSH deploy key with read-only access to the repository
@@ -14,78 +16,76 @@ Target: Ubuntu 24.04, Node 20, PM2, Nginx, Certbot
 
 ```
 /opt/roseair/
-├── current → /opt/roseair/releases/20260707120000   # symlink to active release
+├── current → /opt/roseair/releases/20260707120000
 ├── releases/
-│   ├── 20260707120000/                               # full deploy (node_modules, build)
+│   ├── 20260707120000/
 │   ├── 20260706120000/
 │   └── 20260705120000/
 ├── shared/
-│   ├── .env.production                               # secrets (persists across deploys)
-│   ├── logs/                                         # PM2 log files
-│   └── pids/                                         # PM2 PID files
-└── deploy/                                           # scripts from the repo
+│   ├── .env.production
+│   ├── logs/
+│   └── pids/
+└── deploy/
 ```
 
 ## First Deployment
 
 ```bash
-# 1. SSH into the server
+# SSH into the server
 ssh root@roseairlogistics.com
 
-# 2. Clone the repository
-git clone git@github.com:anomalyco/roseair-logistics.git /opt/roseair/current
+# Clone the repository
+git clone git@github.com:theycallmeSeed/Roseair_Logistics.git /opt/roseair/current
 cd /opt/roseair/current
 
-# 3. Run the installer (system deps, Node, PM2, Nginx, UFW)
+# Run the installer (system deps, Node, PM2, Nginx, UFW)
 sudo bash deploy/install.sh
 
-# 4. Create production env file
+# Create shared directory and env file
+mkdir -p /opt/roseair/shared
 cp .env.production.example /opt/roseair/shared/.env.production
 nano /opt/roseair/shared/.env.production
 # Fill in: RESEND_API_KEY, CONTACT_EMAIL, FROM_EMAIL
 
-# 5. Link env and log directories
+# Link env and log directories
 ln -sf /opt/roseair/shared/.env.production /opt/roseair/current/.env.production
-ln -sf /opt/roseair/shared/logs /opt/roseair/current/logs
-ln -sf /opt/roseair/shared/pids /opt/roseair/current/pids
+ln -sfn /opt/roseair/shared/logs /opt/roseair/current/logs
+ln -sfn /opt/roseair/shared/pids /opt/roseair/current/pids
 
-# 6. Install and build
+# Install and build
 cd /opt/roseair/current
 npm ci --omit=dev
 npm run build
 
-# 7. Test the server
-npm run start &
-curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000
+# Test the server
+node server.js &
+sleep 3
+curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/health
 # Expected: 200
 kill %1
 
-# 8. Start with PM2
+# Start with PM2
 pm2 start ecosystem.config.js
 pm2 save
 sudo env PATH=$PATH:/usr/bin pm2 startup systemd
 
-# 9. Obtain SSL certificate
+# Obtain SSL certificate
 sudo certbot --nginx -d roseairlogistics.com -d www.roseairlogistics.com
 
-# 10. Verify
-curl -I https://roseairlogistics.com
-# Expected: HTTP/2 200, Strict-Transport-Security header
+# Verify
+curl -I https://roseairlogistics.com/health
+# Expected: HTTP/2 200
 ```
 
 ## Deploying Updates
 
 ```bash
-# Automated (from repo root on the server):
-sudo bash deploy/deploy.sh main
+# Automated deploy (via GitHub Actions):
+#   Push to main — the Deploy workflow runs automatically.
+#   Or trigger manually: GitHub → Actions → Deploy → Run workflow
 
-# Or manually:
-#   1. Push to GitHub
-#   2. SSH into server
-#   3. cd /opt/roseair/current && git pull
-#   4. npm ci --omit=dev
-#   5. npm run build
-#   6. pm2 restart roseair (graceful)
+# Manual deploy from server:
+bash deploy/deploy.sh main
 ```
 
 The `deploy.sh` script:
@@ -111,8 +111,8 @@ sudo bash deploy/rollback.sh 20260706120000
 
 The rollback script:
 
-1. Finds the target release
-2. Asks for confirmation
+1. Validates the target release has `ecosystem.config.js`, `dist/server`, `dist/client`
+2. Asks for confirmation (skips when piped from CI)
 3. Updates the `current` symlink
 4. Restarts PM2
 
@@ -124,8 +124,6 @@ sudo certbot --nginx -d roseairlogistics.com -d www.roseairlogistics.com
 
 # Test auto-renewal:
 sudo certbot renew --dry-run
-
-# Certbot installs a systemd timer — renewals happen automatically.
 ```
 
 ## PM2 Management
@@ -174,9 +172,6 @@ tail -f /opt/roseair/shared/logs/roseair-error.log
 # Nginx logs
 tail -f /var/log/nginx/roseair-access.log
 tail -f /var/log/nginx/roseair-error.log
-
-# Application logs (server.js)
-# Errors are logged to stderr via console.error and captured by PM2.
 ```
 
 ## Health Check
@@ -189,8 +184,7 @@ bash deploy/healthcheck.sh http://127.0.0.1:3000
 bash deploy/healthcheck.sh https://roseairlogistics.com
 
 # Manual
-curl -f http://127.0.0.1:3000
-curl -f https://roseairlogistics.com/health
+curl -f http://127.0.0.1:3000/health
 ```
 
 ## Troubleshooting
@@ -198,93 +192,46 @@ curl -f https://roseairlogistics.com/health
 ### Server won't start
 
 ```bash
-# Check build output exists
 ls -la dist/server/index.js
-
-# Check Node version
-node -v   # should be >= 20
-
-# Check for port conflicts
-ss -tlnp | grep 3000
-
-# Check env file
+node -v                          # should be >= 20
+ss -tlnp | grep 3000             # check port conflicts
 test -f .env.production && echo "exists" || echo "missing"
-
-# Run directly (not PM2) to see errors
-node server.js
+node server.js                   # run directly to see errors
 ```
 
 ### Forms not sending email
 
 ```bash
-# Check env vars
 node -e "console.log(process.env.RESEND_API_KEY ? 'set' : 'unset')"
-
-# Verify Resend API key in dashboard
-# Verify FROM_EMAIL domain is verified in Resend
+# Verify FROM_EMAIL domain is verified in Resend dashboard
 ```
 
 ### Nginx issues
 
 ```bash
-# Test configuration
 sudo nginx -t
-
-# Check syntax errors
-sudo nginx -t 2>&1
-
-# Restart
 sudo systemctl reload nginx
-
-# Check logs
 sudo tail -f /var/log/nginx/error.log
-```
-
-### SSL issues
-
-```bash
-# Check certificate expiry
-sudo certbot certificates
-
-# Force renew
-sudo certbot renew --force-renewal
 ```
 
 ### 502 Bad Gateway
 
 ```bash
-# PM2 process crashed
 pm2 status
 pm2 logs roseair --lines 20
-
-# Nginx cannot reach backend
-curl -f http://127.0.0.1:3000
-
-# Port mismatch
+curl -f http://127.0.0.1:3000/health
 grep proxy_pass /etc/nginx/sites-available/roseairlogistics.com
 grep PORT /opt/roseair/current/.env.production
 ```
-
-## Security Notes
-
-- The Node process binds to `127.0.0.1:3000` — it is **not** directly exposed
-- Nginx terminates TLS and forwards to the local backend
-- UFW allows only SSH (22), HTTP (80), and HTTPS (443)
-- HSTS is enabled (6 months, include subdomains)
-- Honeypot spam protection on all forms
-- Rate limiter: 5 requests/minute/IP on form endpoints
 
 ## Deployment Checklist
 
 Before each deployment, verify:
 
 - [ ] `npm run build` succeeds (zero errors)
-- [ ] `npm run lint` passes (zero errors, pre-existing warnings acceptable)
+- [ ] `npm run lint` passes (zero errors)
 - [ ] `npm run start` boots and responds on port 3000
-- [ ] `curl -f http://127.0.0.1:3000/` returns 200
-- [ ] `curl -f http://127.0.0.1:3000/robots.txt` returns 200
-- [ ] `curl -f http://127.0.0.1:3000/sitemap.xml` returns 200
-- [ ] `curl -f http://127.0.0.1:3000/favicon.ico` returns 200
+- [ ] `curl -f http://127.0.0.1:3000/health` returns HTTP 200 with `{"status":"ok"}`
 - [ ] `.env.production` contains valid `RESEND_API_KEY`, `CONTACT_EMAIL`, `FROM_EMAIL`
 - [ ] `FROM_EMAIL` domain is verified in Resend dashboard
 - [ ] Nginx config is valid: `sudo nginx -t`

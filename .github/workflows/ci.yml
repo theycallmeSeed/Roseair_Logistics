@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          check-latest: false
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run build
+        run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          errors=0
+          for dir in dist/client dist/server; do
+            if [ ! -d "$dir" ]; then
+              echo "::error::Build artifact missing: $dir"
+              errors=$((errors + 1))
+            else
+              count=$(find "$dir" -type f | wc -l)
+              echo "  $dir: $count files"
+              if [ "$count" -eq 0 ]; then
+                echo "::error::Build artifact empty: $dir"
+                errors=$((errors + 1))
+              fi
+            fi
+          done
+          if [ "$errors" -gt 0 ]; then
+            echo "::error::Build verification failed with $errors error(s)"
+            exit 1
+          fi
+          echo "All build artifacts verified successfully."

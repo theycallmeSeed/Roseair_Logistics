@@ -16,27 +16,50 @@ if [ -n "${1:-}" ]; then
     TARGET="${APP_DIR}/releases/$1"
     if [ ! -d "${TARGET}" ]; then
         echo "ERROR: Release '${APP_DIR}/releases/$1' not found."
-        ls "${APP_DIR}/releases/" 2>/dev/null || echo "(no releases exist)"
+        echo "Available releases:"
+        ls -1 "${APP_DIR}/releases/" 2>/dev/null || echo "  (none)"
         exit 1
     fi
 else
-    TARGET=$(ls -1t "${APP_DIR}/releases/" | sed -n '2p')
+    TARGET=$(ls -1t "${APP_DIR}/releases/" 2>/dev/null | sed -n '2p')
+    if [ -z "${TARGET}" ]; then
+        echo "ERROR: No previous release found for rollback."
+        exit 1
+    fi
     TARGET="${APP_DIR}/releases/${TARGET}"
     if [ ! -d "${TARGET}" ]; then
-        echo "ERROR: No previous release found for rollback."
+        echo "ERROR: Target release directory missing: ${TARGET}"
         exit 1
     fi
 fi
 
-# ── Confirm ────────────────────────────────────────────────────────────
+# ── Validate target exists and has required files ───────────────────────
+if [ ! -f "${TARGET}/ecosystem.config.js" ]; then
+    echo "ERROR: Target release missing ecosystem.config.js — aborting."
+    exit 1
+fi
+if [ ! -d "${TARGET}/dist/server" ]; then
+    echo "ERROR: Target release missing dist/server — aborting."
+    exit 1
+fi
+if [ ! -d "${TARGET}/dist/client" ]; then
+    echo "ERROR: Target release missing dist/client — aborting."
+    exit 1
+fi
+
+# ── Inform ─────────────────────────────────────────────────────────────
 CURRENT=$(readlink -f "${CURRENT_LINK}" 2>/dev/null || echo "none")
 echo "Current: ${CURRENT}"
 echo "Target:  ${TARGET}"
 echo ""
-read -rp "Rollback to target? [y/N] " CONFIRM
-if [ "${CONFIRM}" != "y" ] && [ "${CONFIRM}" != "Y" ]; then
-    echo "Cancelled."
-    exit 0
+
+# ── Confirm for interactive use; skip confirmation when piped (CI) ─────
+if [ -t 0 ]; then
+    read -rp "Rollback to target? [y/N] " CONFIRM
+    if [ "${CONFIRM}" != "y" ] && [ "${CONFIRM}" != "Y" ]; then
+        echo "Cancelled."
+        exit 0
+    fi
 fi
 
 # ── Activate ────────────────────────────────────────────────────────────
@@ -50,5 +73,5 @@ pm2 start ecosystem.config.js
 
 echo ""
 echo "=== Rollback complete ==="
-echo "Active: ${CURRENT_LINK} → $(readlink -f ${CURRENT_LINK})"
+echo "Active: ${CURRENT_LINK} -> $(readlink -f "${CURRENT_LINK}" 2>/dev/null || echo "broken")"
 echo ""

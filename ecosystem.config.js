@@ -20,6 +20,7 @@ export default {
       listen_timeout: 10000,
       kill_timeout: 10000,
       shutdown_with_message: true,
+      watch: false,
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
       error_file: "./logs/roseair-error.log",
       out_file: "./logs/roseair-out.log",

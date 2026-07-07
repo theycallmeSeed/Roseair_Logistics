@@ -1,0 +1,158 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        default: main
+        type: choice
+        options:
+          - main
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+env:
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/opt/roseair' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      commit: ${{ steps.commit.outputs.sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          check-latest: false
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run build
+        run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          errors=0
+          for dir in dist/client dist/server; do
+            if [ ! -d "$dir" ]; then
+              echo "::error::Build artifact missing: $dir"
+              errors=$((errors + 1))
+            else
+              count=$(find "$dir" -type f | wc -l)
+              echo "  $dir: $count files"
+              if [ "$count" -eq 0 ]; then
+                echo "::error::Build artifact empty: $dir"
+                errors=$((errors + 1))
+              fi
+            fi
+          done
+          if [ "$errors" -gt 0 ]; then
+            echo "::error::Build verification failed with $errors error(s)"
+            exit 1
+          fi
+
+      - name: Capture commit SHA
+        id: commit
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: verify
+    if: success()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add production server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ env.SSH_PORT }} -H ${{ env.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy to production
+        id: deploy
+        continue-on-error: true
+        run: |
+          echo "Deploying commit ${{ needs.verify.outputs.commit }} to ${DEPLOY_PATH}..."
+          ssh -o ConnectTimeout=15 -p ${{ env.SSH_PORT }} ${{ env.SSH_USER }}@${{ env.SSH_HOST }} \
+            "cd ${DEPLOY_PATH} && bash deploy/deploy.sh main" && rc=0 || rc=$?
+
+          if [ "${rc}" -ne 0 ]; then
+            echo "::error::Deploy step failed with exit code ${rc}"
+          fi
+          echo "status=${rc}" >> "${GITHUB_OUTPUT}"
+
+      - name: Health check against /health endpoint
+        id: health
+        if: steps.deploy.outputs.status == '0'
+        continue-on-error: true
+        run: |
+          echo "Running health check against /health endpoint..."
+          ssh -o ConnectTimeout=15 -p ${{ env.SSH_PORT }} ${{ env.SSH_USER }}@${{ env.SSH_HOST }} \
+            "cd ${DEPLOY_PATH} && bash deploy/healthcheck.sh" && rc=0 || rc=$?
+
+          if [ "${rc}" -ne 0 ]; then
+            echo "::error::Health check failed with exit code ${rc}"
+          fi
+          echo "status=${rc}" >> "${GITHUB_OUTPUT}"
+
+      - name: Rollback
+        if: steps.deploy.outputs.status != '0' || steps.health.outputs.status != '0'
+        run: |
+          echo "::warning::Deployment or health check failed. Initiating rollback..."
+          echo "Initiating rollback to previous release..."
+          echo "y" | ssh -o ConnectTimeout=15 -p ${{ env.SSH_PORT }} ${{ env.SSH_USER }}@${{ env.SSH_HOST }} \
+            "cd ${DEPLOY_PATH} && bash deploy/rollback.sh"
+          echo "::notice::Rollback complete. Previous release is now active."
+
+      - name: Deployment Status
+        if: always()
+        run: |
+          DEPLOY_STATUS="${{ steps.deploy.outputs.status }}"
+          HEALTH_STATUS="${{ steps.health.outputs.status }}"
+
+          if [ "${DEPLOY_STATUS}" != "0" ] && [ -n "${DEPLOY_STATUS}" ]; then
+            echo "::error::Deploy step failed (exit code ${DEPLOY_STATUS})"
+          fi
+          if [ "${HEALTH_STATUS}" != "0" ] && [ -n "${HEALTH_STATUS}" ]; then
+            echo "::error::Health check failed (exit code ${HEALTH_STATUS})"
+          fi
+
+          if [ "${DEPLOY_STATUS}" != "0" ] || [ "${HEALTH_STATUS}" != "0" ]; then
+            echo "::error::Deployment failed and rollback was executed (commit ${{ needs.verify.outputs.commit }})"
+            exit 1
+          else
+            echo "::notice::Deployment successful (commit ${{ needs.verify.outputs.commit }})"
+          fi

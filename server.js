@@ -27,6 +27,10 @@ if (!fetchHandler) {
   throw new Error("TanStack Start server entry did not expose a fetch handler.");
 }
 
+let buildLoaded = true;
+
+const START_TIME = Date.now();
+
 const MIME_TYPES = new Map([
   [".css", "text/css; charset=utf-8"],
   [".js", "text/javascript; charset=utf-8"],
@@ -63,10 +67,44 @@ function getContentType(filePath) {
   return MIME_TYPES.get(extname(filePath).toLowerCase()) ?? "application/octet-stream";
 }
 
+function tryHealth(request, response) {
+  if (request.method !== "GET" && request.method !== "HEAD") return false;
+
+  const host = request.headers["x-forwarded-host"] ?? request.headers.host ?? "localhost";
+  const proto = request.headers["x-forwarded-proto"] ?? "http";
+  const url = new URL(request.url ?? "/", `${proto}://${host}`);
+
+  if (url.pathname !== "/health") return false;
+
+  response.statusCode = 200;
+  response.setHeader("Content-Type", "application/json; charset=utf-8");
+  response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+
+  const health = {
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor((Date.now() - START_TIME) / 1000),
+    buildLoaded,
+  };
+
+  const body = JSON.stringify(health);
+  response.setHeader("Content-Length", String(Buffer.byteLength(body)));
+
+  if (request.method === "HEAD") {
+    response.end();
+    return true;
+  }
+
+  response.end(body);
+  return true;
+}
+
 async function tryServeStatic(request, response) {
   if (request.method !== "GET" && request.method !== "HEAD") return false;
 
-  const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+  const host = request.headers["x-forwarded-host"] ?? request.headers.host ?? "localhost";
+  const proto = request.headers["x-forwarded-proto"] ?? "http";
+  const url = new URL(request.url ?? "/", `${proto}://${host}`);
   let pathname;
   try {
     pathname = decodeURIComponent(url.pathname);
@@ -90,6 +128,7 @@ async function tryServeStatic(request, response) {
 
   response.statusCode = 200;
   response.setHeader("Content-Type", getContentType(candidatePath));
+  response.setHeader("Content-Length", String(fileStat.size));
   response.setHeader(
     "Cache-Control",
     pathname.startsWith("/assets/")
@@ -108,10 +147,13 @@ async function tryServeStatic(request, response) {
 
 async function handleRequest(request, response) {
   try {
+    if (tryHealth(request, response)) return;
     if (await tryServeStatic(request, response)) return;
 
+    const host = request.headers["x-forwarded-host"] ?? request.headers.host ?? "localhost";
+    const proto = request.headers["x-forwarded-proto"] ?? "http";
     const headers = buildHeaders(request.headers);
-    const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+    const url = new URL(request.url ?? "/", `${proto}://${host}`);
     const init = {
       method: request.method,
       headers,
@@ -133,6 +175,10 @@ async function handleRequest(request, response) {
     });
 
     if (request.method === "HEAD" || !handlerResponse.body) {
+      if (handlerResponse.body && request.method === "HEAD") {
+        const reader = handlerResponse.body.getReader();
+        reader.cancel().catch(() => {});
+      }
       response.end();
       return;
     }
@@ -143,8 +189,10 @@ async function handleRequest(request, response) {
     if (!response.headersSent) {
       response.statusCode = 500;
       response.setHeader("Content-Type", "text/plain; charset=utf-8");
+      response.end("Internal Server Error");
+    } else {
+      response.destroy();
     }
-    response.end("Internal Server Error");
   }
 }
 
