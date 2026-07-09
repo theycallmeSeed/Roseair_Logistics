@@ -11,7 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import servicesBanner from "@/assets/services-banner.jpg";
+import servicesBanner from "@/assets/services-banner.webp";
 
 export const Route = createFileRoute("/servicos")({
   head: () => ({

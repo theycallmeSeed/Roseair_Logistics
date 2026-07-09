@@ -5,7 +5,7 @@ import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EXPANSION_COUNTRIES } from "@/lib/site";
-import aboutTeam from "@/assets/about-team.webp";
+import Servicesbaner from "@/assets/Services-baner.webp";
 
 export const Route = createFileRoute("/sobre")({
   head: () => ({
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/sobre")({
         property: "og:description",
         content: "História, missão, visão e cobertura geográfica da Roseair Logistics.",
       },
-      { property: "og:image", content: aboutTeam },
+      { property: "og:image", content: Servicesbaner },
     ],
   }),
   component: AboutPage,
@@ -84,7 +84,7 @@ function AboutPage() {
       <PageHero
         title="Construindo um Futuro mais Eficiente, Conectado e Sustentável"
         subtitle="Comprometidos com a transformação e inovação no mercado logístico de Moçambique."
-        image={aboutTeam}
+        image={Servicesbaner}
         breadcrumb={
           <span>
             <Link to="/" className="hover:text-white">

@@ -9,9 +9,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl container-px py-14">
         <div className="grid gap-10 md:grid-cols-4">
           <div>
-            <div className="rounded-md bg-white/5 p-3 inline-block">
-              <Logo transparent className="h-14" />
-            </div>
+            <Logo />
+
             <p className="mt-4 text-sm text-white/70 leading-relaxed">
               {SITE.tagline}. Soluções integradas de logística, transporte e desembaraço aduaneiro
               em Moçambique e na região SADC.
