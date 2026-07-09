@@ -13,10 +13,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import projectImg from "@/assets/project-brisaesol.jpg";
+import projectImg from "@/assets/project-brisaesol.webp";
 import warehouse from "@/assets/warehouse-team.jpg";
 import services from "@/assets/services-banner.jpg";
-import port from "@/assets/hero-port.jpg";
+import port from "@/assets/hero-port.webp";
 
 export const Route = createFileRoute("/projectos")({
   head: () => ({

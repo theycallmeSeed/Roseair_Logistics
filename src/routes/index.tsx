@@ -26,8 +26,8 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { CLIENTS, SITE } from "@/lib/site";
-import heroPort from "@/assets/hero-port.jpg";
-import warehouseTeam from "@/assets/warehouse-team.jpg";
+import heroPort from "@/assets/hero-port.webp";
+import warehouseTeam from "@/assets/warehouse-team.webp";
 
 export const Route = createFileRoute("/")({
   head: () => ({

@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { SITE } from "@/lib/site";
 import { submitContactForm } from "@/server/contact-form";
 import { FormSuccess } from "@/components/FormSuccess";
-import port from "@/assets/hero-port.jpg";
+import contact from "@/assets/contact.webp";
 
 export const Route = createFileRoute("/contacto")({
   head: () => ({
@@ -95,7 +95,7 @@ function ContactPage() {
       <PageHero
         title="Fale Connosco"
         subtitle="Estamos prontos para discutir o seu próximo envio. Resposta em menos de 24 horas."
-        image={port}
+        image={contact}
         breadcrumb={
           <span>
             <Link to="/" className="hover:text-white">
