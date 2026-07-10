@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/roseair}"
+APP_DIR="${APP_DIR:-/var/www/roseair}"
 APP_USER="${APP_USER:-roseair}"
 NODE_VERSION="${NODE_VERSION:-20}"
 DOMAIN="${DOMAIN:-roseairlogistics.com}"

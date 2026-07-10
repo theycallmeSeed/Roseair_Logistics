@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/roseair}"
+APP_DIR="${APP_DIR:-/var/www/roseair}"
 CURRENT_LINK="${APP_DIR}/current"
 
 echo "=== Roseair Rollback ==="

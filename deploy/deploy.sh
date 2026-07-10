@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/roseair}"
+APP_DIR="${APP_DIR:-/var/www/roseair}"
 REPO_URL="${REPO_URL:-git@github.com:theycallmeSeed/Roseair_Logistics.git}"
 BRANCH="${1:-main}"
 RELEASE_DIR="${APP_DIR}/releases/$(date +%Y%m%d%H%M%S)"
@@ -30,7 +30,7 @@ git clone --depth=1 --branch "${BRANCH}" "${REPO_URL}" "${RELEASE_DIR}"
 # ── 3. Install production dependencies ─────────────────────────────────
 echo "[3/6] Installing dependencies..."
 cd "${RELEASE_DIR}"
-npm ci --omit=dev
+npm ci
 
 # ── 4. Build ───────────────────────────────────────────────────────────
 echo "[4/6] Building..."
