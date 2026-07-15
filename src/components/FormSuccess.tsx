@@ -7,6 +7,7 @@ interface FormSuccessProps {
   message?: string;
   responseTime?: string;
   onClose?: () => void;
+  whatsappUrl?: string;
 }
 
 export function FormSuccess({
@@ -14,6 +15,7 @@ export function FormSuccess({
   message,
   responseTime = "Responderemos em até 24 horas úteis.",
   onClose,
+  whatsappUrl,
 }: FormSuccessProps) {
   return (
     <div className="text-center py-2">
@@ -39,7 +41,7 @@ export function FormSuccess({
             <p className="text-sm text-muted-foreground">
               Enquanto aguarda, fale connosco directamente no{" "}
               <a
-                href={SITE.whatsappUrl()}
+                href={whatsappUrl ?? SITE.whatsappUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary underline hover:no-underline"
