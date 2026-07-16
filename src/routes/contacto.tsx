@@ -52,6 +52,7 @@ function ContactPage() {
     setSubmitted,
     reset: resetLead,
     hpProps,
+    whatsappUrl,
   } = useLeadSubmit();
   const {
     register,
@@ -95,6 +96,7 @@ function ContactPage() {
             {submitted ? (
               <FormSuccess
                 message="Recebemos a sua mensagem. Entraremos em contacto em breve."
+                whatsappUrl={whatsappUrl}
                 onClose={() => {
                   setSubmitted(false);
                   resetLead();
