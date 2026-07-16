@@ -1,3 +1,9 @@
+import dotenv from "dotenv";
+
+dotenv.config({
+  path: ".env.production",
+});
+
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { createReadStream } from "node:fs";
