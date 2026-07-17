@@ -34,8 +34,8 @@ else
 fi
 
 # ── Validate target exists and has required files ───────────────────────
-if [ ! -f "${TARGET}/ecosystem.config.js" ]; then
-    echo "ERROR: Target release missing ecosystem.config.js — aborting."
+if [ ! -f "${TARGET}/ecosystem.config.cjs" ]; then
+    echo "ERROR: Target release missing ecosystem.config.cjs — aborting."
     exit 1
 fi
 if [ ! -d "${TARGET}/dist/server" ]; then
@@ -69,7 +69,7 @@ ln -sfn "${TARGET}" "${CURRENT_LINK}"
 # ── Restart ─────────────────────────────────────────────────────────────
 cd "${CURRENT_LINK}"
 pm2 delete roseair 2>/dev/null || true
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 echo ""
 echo "=== Rollback complete ==="

@@ -65,7 +65,7 @@ curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/health
 kill %1
 
 # Start with PM2
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 pm2 save
 sudo env PATH=$PATH:/usr/bin pm2 startup systemd
 
@@ -111,7 +111,7 @@ sudo bash deploy/rollback.sh 20260706120000
 
 The rollback script:
 
-1. Validates the target release has `ecosystem.config.js`, `dist/server`, `dist/client`
+1. Validates the target release has `ecosystem.config.cjs`, `dist/server`, `dist/client`
 2. Asks for confirmation (skips when piped from CI)
 3. Updates the `current` symlink
 4. Restarts PM2
@@ -149,7 +149,7 @@ pm2 save
 pm2 monit
 ```
 
-### PM2 Configuration (`ecosystem.config.js`)
+### PM2 Configuration (`ecosystem.config.cjs`)
 
 | Setting               | Value    | Notes                         |
 | --------------------- | -------- | ----------------------------- |

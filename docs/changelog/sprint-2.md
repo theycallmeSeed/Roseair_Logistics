@@ -31,7 +31,7 @@
 | `docs/architecture/api-contract.md` | Created | API contract — form types, responses, versioning |
 | `docs/architecture/google-sheets-setup.md` | Created | Deployment guide for Google Workspace |
 | `docs/adr/0001-lead-capture-architecture.md` | Created | Architecture decision record |
-| `ecosystem.config.cjs` | Created | PM2 config (CommonJS, replaced `ecosystem.config.js`) |
+| `ecosystem.config.cjs` | Created | PM2 config (CommonJS, replaced `ecosystem.config.cjs`) |
 | `.env.production.example` | Updated | Added environment variable documentation |
 
 **Note:** The Google Apps Script code (`Code.gs`) was deployed directly in the
@@ -46,7 +46,7 @@ Apps Script editor and is not version-controlled in this repository.
    `--env-file` support provides deterministic loading and improves
    portability across deployment environments (PM2, systemd, Docker).
 
-2. **CommonJS ecosystem config.** `ecosystem.config.js` was replaced with
+2. **CommonJS ecosystem config.** `ecosystem.config.cjs` was replaced with
    `ecosystem.config.cjs` to ensure compatibility with PM2's loading
    mechanism regardless of the project's ESM configuration.
 
