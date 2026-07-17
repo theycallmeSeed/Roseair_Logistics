@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layers,
@@ -36,8 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { SITE } from "@/lib/site";
-import { submitProposalRequest } from "@/server/request-proposal";
+import { useLeadSubmit } from "@/lib/leads";
 import { FormSuccess } from "@/components/FormSuccess";
 
 import { z } from "zod";
@@ -263,13 +262,19 @@ function SimulatorPage() {
   const [categoryId, setCategoryId] = useState("");
   const [clearanceType, setClearanceType] = useState<ClearanceType>("normal");
 
+  const {
+    submit: submitLead,
+    submitting: proposalSubmitting,
+    submitted: proposalSubmitted,
+    setSubmitted: setProposalSubmitted,
+    reset: resetLead,
+    hpProps,
+    whatsappUrl,
+  } = useLeadSubmit();
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [proposalOpen, setProposalOpen] = useState(false);
   const [proposalForm, setProposalForm] = useState({ name: "", email: "", phone: "", company: "" });
-  const [proposalSubmitting, setProposalSubmitting] = useState(false);
-  const [proposalSubmitted, setProposalSubmitted] = useState(false);
-  const submittedDataRef = useRef({ name: "", company: "", phone: "", email: "" });
-  const hpRef = useRef<HTMLInputElement>(null);
 
   const result = useMemo(() => {
     if (!categoryId) return null;
@@ -311,41 +316,22 @@ function SimulatorPage() {
       return;
     }
     const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
-    setProposalSubmitting(true);
-    try {
-      const response = await submitProposalRequest({
-        data: {
-          ...proposalForm,
-          _hp_: hpRef.current?.value ?? "",
-          origin,
-          destination,
-          currency,
-          exchangeRate,
-          fob,
-          declaredFreight,
-          cargoCategory: category?.label ?? "",
-          clearanceType,
-          preselectedService: preselectedService ?? "",
-          ...(result ?? {}),
-        },
-      });
-      if (response.success) {
-        toast.success(response.message);
-        submittedDataRef.current = {
-          name: proposalForm.name,
-          company: proposalForm.company,
-          phone: proposalForm.phone,
-          email: proposalForm.email,
-        };
-        setProposalSubmitted(true);
-        setProposalForm({ name: "", email: "", phone: "", company: "" });
-      } else {
-        toast.error(response.message);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
-    } finally {
-      setProposalSubmitting(false);
+    const submitResult = await submitLead({
+      type: "proposal",
+      ...proposalForm,
+      origin,
+      destination,
+      currency,
+      exchangeRate,
+      fob,
+      declaredFreight,
+      cargoCategory: category?.label ?? "",
+      clearanceType,
+      preselectedService: preselectedService ?? "",
+      ...(result ?? {}),
+    });
+    if (submitResult.success) {
+      setProposalForm({ name: "", email: "", phone: "", company: "" });
     }
   };
 
@@ -711,6 +697,7 @@ function SimulatorPage() {
         onOpenChange={(o) => {
           if (!o) {
             setProposalSubmitted(false);
+            resetLead();
             setProposalOpen(false);
           }
         }}
@@ -727,8 +714,10 @@ function SimulatorPage() {
               </DialogHeader>
               <FormSuccess
                 message="Recebemos os dados da sua simulação com sucesso."
+                whatsappUrl={whatsappUrl}
                 onClose={() => {
                   setProposalSubmitted(false);
+                  resetLead();
                   setProposalOpen(false);
                 }}
               />
@@ -736,25 +725,7 @@ function SimulatorPage() {
                 size="lg"
                 className="rounded-full w-full mt-2"
                 onClick={() => {
-                  const sd = submittedDataRef.current;
-                  const category = TAX_CATEGORIES.find((c) => c.id === categoryId);
-                  const lines = [
-                    "Olá! Acabei de solicitar uma proposta personalizada através do simulador da Roseair Logistics.",
-                    "",
-                    `*Nome:* ${sd.name}`,
-                    sd.company ? `*Empresa:* ${sd.company}` : "",
-                    sd.phone ? `*Telefone:* ${sd.phone}` : "",
-                    sd.email ? `*Email:* ${sd.email}` : "",
-                    origin ? `*Origem:* ${origin}` : "",
-                    destination ? `*Destino:* ${destination}` : "",
-                    category?.label ? `*Categoria:* ${category.label}` : "",
-                    currency ? `*Moeda:* ${currency}` : "",
-                    fob > 0 ? `*Valor FOB:* ${fmt(fob, currency ?? "USD")}` : "",
-                    result?.total != null ? `*Total Estimado:* ${fmt(result.total)}` : "",
-                  ]
-                    .filter(Boolean)
-                    .join("%0A");
-                  window.open(`https://wa.me/${SITE.whatsapp}?text=${lines}`, "_blank");
+                  if (whatsappUrl) window.open(whatsappUrl, "_blank");
                 }}
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
@@ -770,20 +741,7 @@ function SimulatorPage() {
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={submitProposal} className="space-y-3">
-                <input
-                  ref={hpRef}
-                  name="_hp_"
-                  type="text"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  style={{
-                    position: "absolute",
-                    left: "-9999px",
-                    opacity: 0,
-                    height: 0,
-                    width: 0,
-                  }}
-                />
+                <input {...hpProps} />
                 <div>
                   <Label htmlFor="pn">Nome *</Label>
                   <Input

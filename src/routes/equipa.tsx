@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { PageHero } from "@/components/PageHero";
@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { submitApplication } from "@/server/job-application";
+import { useLeadSubmit } from "@/lib/leads";
 import { FormSuccess } from "@/components/FormSuccess";
 import aboutTeam from "@/assets/about-team.webp";
 
@@ -90,34 +90,31 @@ const team = [
 ];
 
 function TeamPage() {
+  const {
+    submit: submitLead,
+    submitting,
+    submitted,
+    setSubmitted,
+    reset: resetLead,
+    hpProps,
+    whatsappUrl,
+  } = useLeadSubmit();
+
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", role: "", message: "" });
-  const [submittingForm, setSubmittingForm] = useState(false);
-  const [submittedApp, setSubmittedApp] = useState(false);
-  const hpRef = useRef<HTMLInputElement>(null);
 
-  const submit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email) {
       toast.error("Preencha nome e email");
       return;
     }
-    setSubmittingForm(true);
-    try {
-      const response = await submitApplication({
-        data: { ...form, _hp_: hpRef.current?.value ?? "" },
-      });
-      if (response.success) {
-        toast.success(response.message);
-        setSubmittedApp(true);
-        setForm({ name: "", email: "", role: "", message: "" });
-      } else {
-        toast.error(response.message);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
-    } finally {
-      setSubmittingForm(false);
+    const result = await submitLead({
+      type: "application",
+      ...form,
+    });
+    if (result.success) {
+      setForm({ name: "", email: "", role: "", message: "" });
     }
   };
 
@@ -185,12 +182,13 @@ function TeamPage() {
         onOpenChange={(o) => {
           if (!o) {
             setOpen(false);
-            setSubmittedApp(false);
+            setSubmitted(false);
+            resetLead();
           }
         }}
       >
         <DialogContent>
-          {submittedApp ? (
+          {submitted ? (
             <>
               <DialogHeader>
                 <DialogTitle>Candidatura Enviada</DialogTitle>
@@ -202,8 +200,10 @@ function TeamPage() {
               <FormSuccess
                 message="A sua candidatura foi registada com sucesso."
                 responseTime="Entraremos em contacto em até 5 dias úteis."
+                whatsappUrl={whatsappUrl}
                 onClose={() => {
-                  setSubmittedApp(false);
+                  setSubmitted(false);
+                  resetLead();
                   setOpen(false);
                 }}
               />
@@ -216,15 +216,8 @@ function TeamPage() {
                   Envie-nos os seus dados e juntamos ao nosso pool de talentos.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={submit} className="space-y-3">
-                <input
-                  ref={hpRef}
-                  name="_hp_"
-                  type="text"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }}
-                />
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <input {...hpProps} />
                 <div>
                   <Label>Nome *</Label>
                   <Input
@@ -258,8 +251,8 @@ function TeamPage() {
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="submit" className="w-full" disabled={submittingForm}>
-                    {submittingForm ? "A enviar..." : "Enviar Candidatura"}
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting ? "A enviar..." : "Enviar Candidatura"}
                   </Button>
                 </DialogFooter>
               </form>

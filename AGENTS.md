@@ -22,13 +22,34 @@ No test framework exists in this repo — no test script.
 ## Architecture
 
 - **File-based routing** under `src/routes/`. Each route file exports a Route via `createFileRoute` with its own `head()` for meta/SEO.
-- **Server functions** in `src/server/*.ts` use `createServerFn({ method: "POST" })` from TanStack Start for form submissions (contact, job applications, proposal requests).
-- **Email via Resend** — requires env vars `RESEND_API_KEY`, `CONTACT_EMAIL`, `FROM_EMAIL` (see `.env.example`). Server functions gracefully degrade with a "temporarily unavailable" message when missing.
-- **Rate limiting** — in-memory, 5 req/min per IP, applied to all three server endpoints.
+- **Server functions** in `src/server/*.ts` use `createServerFn({ method: "POST" })` from TanStack Start.
+- **Lead capture pipeline:** All 3 forms (contacto, equipa, simulador) submit via `src/server/submit-lead.ts` → Google Sheets webhook. A single `useLeadSubmit()` hook in `src/lib/leads/hooks.ts` centralizes submission logic.
+- **WhatsApp auto-open** uses synchronous popup pre-creation: `window.open("", "_blank")` before the `await`, then `popup.location.href` on success. Falls back to manual link in `FormSuccess` when blocked.
+- **Rate limiting** — in-memory, 5 req/min per IP, applied to the submit lead endpoint.
 - **Centralized company data** in `src/lib/site.ts` (address, phones, nav links, client list).
 - **shadcn components** in `src/components/ui/`, aliased via `@/`. Add new ones with `npx shadcn@latest add <component>`.
 - **Tailwind v4** uses CSS-based config (`src/styles.css` with `@theme`, `@import "tailwindcss" source(none)`, custom CSS vars for brand colors).
 - **Deploy targets:** Vercel (vercel.json) and/or Cloudflare Workers (wrangler.jsonc).
+
+## Legacy Resend Pipeline
+
+The previous Resend implementation has been fully replaced by the Google Sheets lead pipeline.
+
+The legacy files are intentionally kept for rollback purposes and must not be imported by new code.
+
+Every legacy file has a documentation block at the top marking it as **LEGACY IMPLEMENTATION — Deprecated**. All exported functions carry a `@deprecated` JSDoc.
+
+**Legacy files (do not edit, do not import):**
+- `src/server/contact-form.ts`
+- `src/server/request-proposal.ts`
+- `src/server/job-application.ts`
+- `src/lib/resend.ts`
+- `src/lib/email/templates.ts`
+- `src/lib/email/sendProposalEmail.ts`
+- `src/lib/email/sendContactEmail.ts`
+- `src/lib/email/sendApplicationEmail.ts`
+
+After the production rollout has been stable and validated, the legacy implementation can be safely removed in a future cleanup sprint.
 
 ## Generated files (do not edit)
 

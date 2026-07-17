@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,9 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
 import { SITE } from "@/lib/site";
-import { submitContactForm } from "@/server/contact-form";
+import { useLeadSubmit, contactLeadSchema } from "@/lib/leads";
 import { FormSuccess } from "@/components/FormSuccess";
 import contact from "@/assets/contact.webp";
 
@@ -43,25 +41,23 @@ export const Route = createFileRoute("/contacto")({
   component: ContactPage,
 });
 
-const schema = z.object({
-  name: z.string().trim().min(2, "Nome demasiado curto").max(100),
-  email: z.string().trim().email("Email inválido").max(255),
-  phone: z.string().trim().min(6, "Telefone inválido").max(40),
-  company: z.string().trim().max(120).optional(),
-  service: z.string().min(1, "Selecione um serviço"),
-  message: z.string().trim().min(10, "Mensagem demasiado curta").max(1000),
-  consent: z.literal(true, { errorMap: () => ({ message: "Aceitação obrigatória" }) }),
-});
+const schema = contactLeadSchema.omit({ type: true, _hp_: true });
 type FormValues = z.infer<typeof schema>;
 
 function ContactPage() {
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const hpRef = useRef<HTMLInputElement>(null);
+  const {
+    submit,
+    submitting,
+    submitted,
+    setSubmitted,
+    reset: resetLead,
+    hpProps,
+    whatsappUrl,
+  } = useLeadSubmit();
   const {
     register,
     handleSubmit,
-    reset,
+    reset: resetForm,
     setValue,
     watch,
     formState: { errors },
@@ -71,22 +67,9 @@ function ContactPage() {
   });
 
   const onSubmit = async (data: FormValues) => {
-    setSubmitting(true);
-    try {
-      const response = await submitContactForm({
-        data: { ...data, _hp_: hpRef.current?.value ?? "" },
-      });
-      if (response.success) {
-        toast.success(response.message);
-        setSubmitted(true);
-        reset();
-      } else {
-        toast.error(response.message);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar. Tente novamente.");
-    } finally {
-      setSubmitting(false);
+    const result = await submit({ ...data, type: "contact" });
+    if (result.success) {
+      resetForm();
     }
   };
 
@@ -113,7 +96,11 @@ function ContactPage() {
             {submitted ? (
               <FormSuccess
                 message="Recebemos a sua mensagem. Entraremos em contacto em breve."
-                onClose={() => setSubmitted(false)}
+                whatsappUrl={whatsappUrl}
+                onClose={() => {
+                  setSubmitted(false);
+                  resetLead();
+                }}
               />
             ) : (
               <>
@@ -213,20 +200,7 @@ function ContactPage() {
                   {errors.consent && (
                     <p className="-mt-2 text-xs text-destructive">{errors.consent.message}</p>
                   )}
-                  <input
-                    ref={hpRef}
-                    name="_hp_"
-                    type="text"
-                    tabIndex={-1}
-                    autoComplete="off"
-                    style={{
-                      position: "absolute",
-                      left: "-9999px",
-                      opacity: 0,
-                      height: 0,
-                      width: 0,
-                    }}
-                  />
+                  <input {...hpProps} />
                   <Button
                     type="submit"
                     size="lg"
