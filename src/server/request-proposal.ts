@@ -1,3 +1,37 @@
+/**
+ * -----------------------------------------------------------------------------
+ * LEGACY IMPLEMENTATION
+ * -----------------------------------------------------------------------------
+ *
+ * Status:
+ * Deprecated
+ *
+ * This file belongs to the previous Resend-based lead delivery pipeline.
+ *
+ * The application now uses:
+ *
+ *   Forms
+ *        ↓
+ * useLeadSubmit()
+ *        ↓
+ * submit-lead.ts
+ *        ↓
+ * Google Apps Script
+ *        ↓
+ * Google Sheets
+ *        ↓
+ * WhatsApp Follow-up
+ *
+ * This implementation is intentionally kept for rollback purposes.
+ *
+ * DO NOT import this file into new code.
+ *
+ * DO NOT extend this implementation.
+ *
+ * Remove only after the Google Sheets pipeline has been validated in production.
+ * -----------------------------------------------------------------------------
+ */
+
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -33,6 +67,15 @@ const schema = z.object({
   _hp_: z.string().optional(),
 });
 
+/**
+ * @deprecated
+ *
+ * Legacy Resend implementation.
+ *
+ * Not used by the application.
+ *
+ * Kept temporarily for rollback purposes.
+ */
 export const submitProposalRequest = createServerFn({
   method: "POST",
 })

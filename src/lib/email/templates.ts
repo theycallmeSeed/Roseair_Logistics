@@ -1,3 +1,37 @@
+/**
+ * -----------------------------------------------------------------------------
+ * LEGACY IMPLEMENTATION
+ * -----------------------------------------------------------------------------
+ *
+ * Status:
+ * Deprecated
+ *
+ * This file belongs to the previous Resend-based lead delivery pipeline.
+ *
+ * The application now uses:
+ *
+ *   Forms
+ *        ↓
+ * useLeadSubmit()
+ *        ↓
+ * submit-lead.ts
+ *        ↓
+ * Google Apps Script
+ *        ↓
+ * Google Sheets
+ *        ↓
+ * WhatsApp Follow-up
+ *
+ * This implementation is intentionally kept for rollback purposes.
+ *
+ * DO NOT import this file into new code.
+ *
+ * DO NOT extend this implementation.
+ *
+ * Remove only after the Google Sheets pipeline has been validated in production.
+ * -----------------------------------------------------------------------------
+ */
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -102,6 +136,15 @@ interface ContactNotificationData {
   userAgent?: string;
 }
 
+/**
+ * @deprecated
+ *
+ * Legacy Resend template.
+ *
+ * Not used by the application.
+ *
+ * Kept temporarily for rollback purposes.
+ */
 export function contactNotificationHtml(data: ContactNotificationData): string {
   const rows = [
     fieldRow("Nome", data.name),
@@ -136,6 +179,15 @@ export function contactNotificationHtml(data: ContactNotificationData): string {
     </table>`);
 }
 
+/**
+ * @deprecated
+ *
+ * Legacy Resend template.
+ *
+ * Not used by the application.
+ *
+ * Kept temporarily for rollback purposes.
+ */
 export function contactConfirmationHtml(name: string): string {
   return layoutHtml(`
     <h2 style="color:${NAVY};margin:0 0 16px;font-size:20px">Recebemos a sua mensagem</h2>
@@ -189,6 +241,15 @@ function fmtNum(val: number | undefined | null): string {
   return val.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+/**
+ * @deprecated
+ *
+ * Legacy Resend template.
+ *
+ * Not used by the application.
+ *
+ * Kept temporarily for rollback purposes.
+ */
 export function proposalNotificationHtml(data: ProposalNotificationData): string {
   const customerRows = [
     fieldRow("Nome", data.name),
@@ -257,6 +318,15 @@ export function proposalNotificationHtml(data: ProposalNotificationData): string
     </table>`);
 }
 
+/**
+ * @deprecated
+ *
+ * Legacy Resend template.
+ *
+ * Not used by the application.
+ *
+ * Kept temporarily for rollback purposes.
+ */
 export function proposalConfirmationHtml(name: string): string {
   return layoutHtml(`
     <h2 style="color:${NAVY};margin:0 0 16px;font-size:20px">Recebemos o seu pedido de proposta</h2>
@@ -276,6 +346,15 @@ interface ApplicationNotificationData {
   message?: string;
 }
 
+/**
+ * @deprecated
+ *
+ * Legacy Resend template.
+ *
+ * Not used by the application.
+ *
+ * Kept temporarily for rollback purposes.
+ */
 export function applicationNotificationHtml(data: ApplicationNotificationData): string {
   const rows = [
     fieldRow("Nome", data.name),
@@ -305,6 +384,15 @@ export function applicationNotificationHtml(data: ApplicationNotificationData): 
     </table>`);
 }
 
+/**
+ * @deprecated
+ *
+ * Legacy Resend template.
+ *
+ * Not used by the application.
+ *
+ * Kept temporarily for rollback purposes.
+ */
 export function applicationConfirmationHtml(name: string): string {
   return layoutHtml(`
     <h2 style="color:${NAVY};margin:0 0 16px;font-size:20px">Recebemos a sua candidatura</h2>
