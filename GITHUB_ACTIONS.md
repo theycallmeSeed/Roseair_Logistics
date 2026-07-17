@@ -151,7 +151,7 @@ Rollback is automatic when:
 
 The rollback:
 1. Runs `echo "y" | bash deploy/rollback.sh` (auto-confirms when piped)
-2. Validates the target release has `ecosystem.config.js`, `dist/server`, `dist/client`
+2. Validates the target release has `ecosystem.config.cjs`, `dist/server`, `dist/client`
 3. Updates the `current` symlink
 4. Restarts PM2 with the previous build
 5. The deployment workflow exits with failure status

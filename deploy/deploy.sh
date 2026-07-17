@@ -50,7 +50,7 @@ ln -sfn "${RELEASE_DIR}" "${CURRENT_LINK}"
 # ── Restart application ────────────────────────────────────────────────
 cd "${CURRENT_LINK}"
 pm2 delete roseair 2>/dev/null || true
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 
 # ── Clean old releases ──────────────────────────────────────────────────
 echo "Cleaning old releases (keeping last ${KEEP_RELEASES})..."
