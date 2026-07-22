@@ -4,6 +4,7 @@
 # Creates a timestamped release, builds, links shared files, and restarts PM2.
 # Idempotent: safe to re-run (same branch re-clones into a new release dir).
 
+
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-/var/www/roseair}"
@@ -13,6 +14,15 @@ RELEASE_DIR="${APP_DIR}/releases/$(date +%Y%m%d%H%M%S)"
 SHARED_DIR="${APP_DIR}/shared"
 CURRENT_LINK="${APP_DIR}/current"
 KEEP_RELEASES="${KEEP_RELEASES:-5}"
+# Ensure shared directory exists
+mkdir -p "${SHARED_DIR}"
+
+# Verify production environment
+if [ ! -f "${SHARED_DIR}/.env.production" ]; then
+    echo "ERROR: Missing ${SHARED_DIR}/.env.production"
+    echo "Provision the production environment before deploying."
+    exit 1
+fi
 
 echo "=== Roseair Deploy ==="
 echo "Repository: ${REPO_URL}"
