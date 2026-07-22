@@ -9,7 +9,6 @@ module.exports = {
         HOST: "127.0.0.1",
         PORT: "3000",
       },
-      env_file: ".env.production",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
