@@ -79,7 +79,8 @@ Production runs on a self-hosted Ubuntu 24.04 / Node 20 / PM2 / Nginx / Certbot 
 
 - `GOOGLE_SHEETS_WEBHOOK_URL` — required for the active lead pipeline (`src/lib/leads/store.ts`).
 - `RESEND_API_KEY`, `CONTACT_EMAIL`, `FROM_EMAIL` — only used by the legacy/deprecated email pipeline above.
-- `HOST`, `PORT`, `NODE_ENV` — used by `server.js` in production.
+- `HOST`, `PORT`, `NODE_ENV` — set directly in `ecosystem.config.cjs`'s `env` block; used by `server.js` in production.
+- Secrets (`GOOGLE_SHEETS_WEBHOOK_URL`, etc.) are loaded by `server.js` itself via `dotenv.config({ path: resolve(rootDir, ".env.production") })`, where `rootDir` is derived from `import.meta.url` — **not** `process.cwd()`. This is deliberate: PM2's `cwd` resolution for the spawned process isn't guaranteed to match the release directory deploy.sh symlinks `.env.production` into, so the dotenv path must be anchored to `server.js`'s own location instead. PM2 has no native `env_file` option — don't reintroduce one in `ecosystem.config.cjs`, it's silently ignored.
 
 ## Workflow
 

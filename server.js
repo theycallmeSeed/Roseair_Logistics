@@ -1,9 +1,4 @@
 import dotenv from "dotenv";
-
-dotenv.config({
-  path: ".env.production",
-});
-
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { createReadStream } from "node:fs";
@@ -16,6 +11,14 @@ import { fileURLToPath } from "node:url";
 const rootDir = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const clientDir = resolve(rootDir, "dist/client");
 const serverEntryPath = resolve(rootDir, "dist/server/index.js");
+
+// Resolved against the script's own location (not process.cwd()), since PM2's
+// working directory for the spawned process isn't guaranteed to match the
+// release dir that deploy.sh symlinks .env.production into.
+dotenv.config({ path: resolve(rootDir, ".env.production") });
+console.log(
+  `[server] GOOGLE_SHEETS_WEBHOOK_URL ${process.env.GOOGLE_SHEETS_WEBHOOK_URL ? "loaded" : "MISSING"}`,
+);
 
 if (!existsSync(serverEntryPath)) {
   throw new Error("Build output not found. Run `npm run build` before `npm run start`.");
